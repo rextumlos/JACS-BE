@@ -8,18 +8,32 @@ const router = require("express").Router();
 
 // Get all users
 router.get("/", verifyTokenAndAdmin, async (req, res) => {
+  let { page, limit } = req.query;
+
+  page > 1 ? page : page = 1;
+  limit > 1 ? limit : limit = 10;
+
   try {
-    const users = await User.find();
+    const users = await User.find()
+      .limit(limit * 1)
+      .skip((page - 1) * 1)
+      .exec();
+
+    const count = await User.countDocuments();
     const result = [];
 
     for (let user of users) {
       const { password, ...userInfo } = user._doc;
       result.push(userInfo);
     }
+
     return res.status(200).json({
       status: 200,
       result,
+      totalPages: Math.ceil(count),
+      currentPage: Number(page),
     });
+
   } catch (error) {
     console.log(error);
     return res.status(500).json(error);
@@ -27,7 +41,7 @@ router.get("/", verifyTokenAndAdmin, async (req, res) => {
 });
 
 
-// Get user stats
+// Get user statistics
 router.get("/stats", verifyTokenAndAdmin, async (req, res) => {
   const date = new Date();
   const lastYear = new Date(date.setFullYear(date.getFullYear() - 1));
@@ -43,7 +57,7 @@ router.get("/stats", verifyTokenAndAdmin, async (req, res) => {
       {
         $group: {
           _id: "$month",
-          total: {$sum: 1},
+          total: { $sum: 1 },
         }
       }
     ]).catch((err) => console.log(err));
@@ -105,7 +119,7 @@ router.get("/:id", verifyTokenAndAdmin, async (req, res) => {
     const { password, ...userInfo } = user._doc;
     return res.status(200).json({
       status: 200,
-      result: { userInfo },
+      result: userInfo ,
     });
   } catch (error) {
     return res.status(500).json(error);
