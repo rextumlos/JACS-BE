@@ -13,14 +13,14 @@ exports.getUserById = (req, res, next, id) => {
                 message: "User not found."
             })
         else {
-            req.user = user;
+            req.profile = user._doc;
             next();
         }
     })
 }
 
 exports.getUser = (req, res) => {
-    const { password, ...userInfo } = req.user;
+    const { password, ...userInfo } = req.profile;
     return res.status(200).json({
         status: 200,
         result: userInfo
@@ -73,7 +73,7 @@ exports.getAllUsers = async (req, res) => {
     try {
         const users = await User.find()
             .limit(limit * 1)
-            .skip((page - 1) * 1)
+            .skip((page - 1) * limit)
             .exec();
 
         const count = await User.countDocuments();
