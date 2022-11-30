@@ -11,10 +11,6 @@ const UserSchema = new mongoose.Schema(
       type: String,
       required: [true, "Password is required."],
     },
-    email: {
-      type: String,
-      unique: true,
-    },
     isAdmin: {
       type: Boolean,
       default: false,

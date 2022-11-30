@@ -8,10 +8,10 @@ const port = process.env.PORT || 8080;
 dotenv.config();
 
 // Routes
-const userRoutes = require("./routes/controllers/users");
-const productRoutes = require("./routes/controllers/products");
-const buildRoutes = require("./routes/controllers/builds");
-const authRoutes = require("./routes/utils/auth");
+const userRoutes = require("./routes/users");
+const productRoutes = require("./routes/products");
+const buildRoutes = require("./routes/builds");
+const authRoutes = require("./routes/auth");
 const User = require("./models/User");
 
 // Database Connection
@@ -27,7 +27,6 @@ db.once("open", () => {
           "admin",
           process.env.PASSPHRASE
         ).toString(),
-        email: "admin@example.com",
         isAdmin: true
       }
     },
@@ -38,10 +37,10 @@ db.once("open", () => {
 
 app.use(express.json());
 
-app.use("/api/users", userRoutes);
-app.use("/api/products", productRoutes);
-app.use("/api/builds", buildRoutes);
-app.use("/api/auth", authRoutes);
+app.use("/api", userRoutes);
+app.use("/api", productRoutes);
+app.use("/api", buildRoutes);
+app.use("/api", authRoutes);
 
 app.listen(port, () => {
   console.log(`Server started. Listening on port ${port}...`);
