@@ -1,18 +1,25 @@
-const User = require("../../models/User");
+const User = require("../models/User");
 
-const router = require("express").Router();
 const CryptoJS = require("crypto-js");
 const jwt = require("jsonwebtoken");
+const { validationResult } = require("express-validator");
 
-// Register
-router.post("/register", async (req, res) => {
+exports.register = async (req, res) => {
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      status: 400,
+      message: errors.array()[0].msg
+    })
+  }
+
   const newUser = new User({
     username: req.body.username,
     password: CryptoJS.AES.encrypt(
       req.body.password,
       process.env.PASSPHRASE
     ).toString(),
-    email: req.body.email,
   });
 
   try {
@@ -44,10 +51,9 @@ router.post("/register", async (req, res) => {
       });
     } else return res.status(500).json(error);
   }
-});
+}
 
-// Login
-router.post("/login", async (req, res) => {
+exports.login = async (req, res) => {
   try {
     const user = await User.findOne({ username: req.body.username });
     if (!user) {
@@ -94,6 +100,4 @@ router.post("/login", async (req, res) => {
   } catch (error) {
     return res.status(500).json(error);
   }
-});
-
-module.exports = router;
+}
