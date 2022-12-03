@@ -1,8 +1,10 @@
 const User = require("../models/User");
+const CryptoJS = require("crypto-js");
+const UserDetails = require("../models/UserDetails");
 
 exports.getUserById = (req, res, next, id) => {
     User.findById(id).exec((error, user) => {
-        if(error)
+        if (error)
             return res.status(400).json({
                 status: 400,
                 message: error
@@ -28,7 +30,28 @@ exports.getUser = (req, res) => {
 }
 
 exports.updateUser = async (req, res) => {
+    const checkUser = await User.findOne({ username: req.body.username })
+
+    if (req.body.username) {
+        if (req.body.username.length < 5)
+            return res.status(400).json({
+                status: 400,
+                message: "Username must be at least 5 chars long."
+            })
+
+        if (checkUser.username !== req.profile.username)
+            return res.status(400).json({
+                status: 400,
+                message: "Username already exists."
+            })
+    }
+
     if (req.body.password) {
+        if (req.body.password.length < 5)
+            return res.status(400).json({
+                status: 400,
+                message: "Password must be at least 5 chars long."
+            })
         req.body.password = CryptoJS.AES.encrypt(
             req.body.password,
             process.env.PASSPHRASE
@@ -37,7 +60,7 @@ exports.updateUser = async (req, res) => {
 
     try {
         const updatedUser = await User.findByIdAndUpdate(
-            req.params.id,
+            req.profile._id,
             {
                 $set: req.body,
             },
@@ -54,11 +77,15 @@ exports.updateUser = async (req, res) => {
 }
 
 exports.deleteUser = async (req, res) => {
+    const { _id } = req.profile;
+    const id = _id.toString();
+
     try {
-        await User.findByIdAndDelete(req.params.id);
+        await User.findByIdAndDelete(id);
+        await UserDetails.findOneAndDelete({userId: id});
         return res.status(200).json({
             status: 200,
-            message: `User ${req.params.id} has been successfully deleted.`,
+            message: `User ${id} has been successfully deleted.`,
         });
     } catch (error) {
         return res.status(500).json(error);
@@ -66,29 +93,19 @@ exports.deleteUser = async (req, res) => {
 }
 
 exports.getAllUsers = async (req, res) => {
-    let { page, limit } = req.query;
-    page > 1 ? page : page = 1;
-    limit > 1 ? limit : limit = 10;
+    let { query, page = 1, limit = 10 } = req.query;
+
+    const options = {
+        page: page,
+        limit: limit
+    };
 
     try {
-        const users = await User.find()
-            .limit(limit * 1)
-            .skip((page - 1) * limit)
-            .exec();
-
-        const count = await User.countDocuments();
-        const result = [];
-
-        for (let user of users) {
-            const { password, ...userInfo } = user._doc;
-            result.push(userInfo);
-        }
+        const users = await User.paginate(query, options)
 
         return res.status(200).json({
             status: 200,
-            result,
-            totalPages: Math.ceil(count / limit),
-            currentPage: Number(page),
+            result: users
         });
 
     } catch (error) {
