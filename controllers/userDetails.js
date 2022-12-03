@@ -125,7 +125,7 @@ exports.addUserDetail = async (req, res) => {
                     to: newUserDetail.email,
                     subject: "Email confirmation",
                     html: `Please click the link below to confirm your email. <br>
-                        <a href=http://${req.headers.host}/api/verify/${emailToken._userId}/${emailToken.token}>Verify your email</a><br>
+                        <a href=${process.env.URI}/api/verify/${emailToken._userId}/${emailToken.token}>Verify your email</a><br>
                         Thank you for creating your account!`
                 };
                 
