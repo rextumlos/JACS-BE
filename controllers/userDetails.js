@@ -99,45 +99,47 @@ exports.addUserDetail = async (req, res) => {
                 })
             }
 
-            const emailToken = new EmailToken({
-                _userId: userId,
-                token: crypto.randomBytes(16).toString("hex"),
-            });
+            EmailToken.findOneAndUpdate(
+                { _userId: userId },
+                {
+                    token: crypto.randomBytes(16).toString("hex"),
+                    expires: "15m",
+                },
+                { upsert: true, new: true, setDefaultsOnInsert: true },
+                (error, data) => {
+                    if (error) {
+                        return res.status(400).json({
+                            status: 400,
+                            message: error,
+                        })
+                    }
 
-            await emailToken.save(error => {
-                if (error) {
-                    return res.status(400).json({
-                        status: 400,
-                        message: error,
+                    const transporter = nodemailer.createTransport({
+                        service: "gmail",
+                        auth: {
+                            user: process.env.GMAIL_EMAIL,
+                            pass: process.env.GMAIL_PASS,
+                        }
+                    });
+
+                    const mailOptions = {
+                        from: process.env.GMAIL_EMAIL,
+                        to: newUserDetail.email,
+                        subject: "Email confirmation",
+                        html: `Please click the link below to confirm your email. <br>
+                            <a href=${process.env.URI}/api/verify/${data._userId}/${data.token}>Verify your email</a><br>
+                            Thank you for creating your account!`
+                    };
+
+                    transporter.sendMail(mailOptions, (error, response) => {
+                        if (error) {
+                            console.log(error);
+                        } else {
+                            console.log("Email verification sent.");
+                        }
                     })
                 }
-
-                const transporter = nodemailer.createTransport({
-                    service: "gmail",
-                    auth: {
-                        user: process.env.GMAIL_EMAIL,
-                        pass: process.env.GMAIL_PASS,
-                    }
-                });
-
-                const mailOptions = {
-                    from: process.env.GMAIL_EMAIL,
-                    to: newUserDetail.email,
-                    subject: "Email confirmation",
-                    html: `Please click the link below to confirm your email. <br>
-                        <a href=${process.env.URI}/api/verify/${emailToken._userId}/${emailToken.token}>Verify your email</a><br>
-                        Thank you for creating your account!`
-                };
-                
-                transporter.sendMail(mailOptions, (error, response) => {
-                    if(error) {
-                        console.log(error);
-                    } else {
-                        console.log("Email verification sent.");
-                    }
-                })
-
-            })
+            )
         })
 
         res.status(201).json({
@@ -209,3 +211,74 @@ exports.deleteUserDetail = async (req, res) => {
     }
 }
 
+exports.resendverification = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({
+            status: 400,
+            message: errors.array()[0].msg
+        })
+    }
+
+    try {
+        const email = req.body.email;
+        const findUser = await UserDetails.findOne({ email: email });
+
+        if (!findUser)
+            return res.status(400).json({
+                status: 400,
+                message: "Sorry, there is no user using the email you have input."
+            })
+
+        EmailToken.findOneAndUpdate(
+            { _userId: findUser.userId },
+            {
+                token: crypto.randomBytes(16).toString("hex"),
+                expires: "15m",
+            },
+            { upsert: true, new: true, setDefaultsOnInsert: true },
+            (error, data) => {
+                if (error) {
+                    return res.status(400).json({
+                        status: 400,
+                        message: error,
+                    })
+                }
+
+                const transporter = nodemailer.createTransport({
+                    service: "gmail",
+                    auth: {
+                        user: process.env.GMAIL_EMAIL,
+                        pass: process.env.GMAIL_PASS,
+                    }
+                });
+
+                const mailOptions = {
+                    from: process.env.GMAIL_EMAIL,
+                    to: findUser.email,
+                    subject: "Email confirmation",
+                    html: `Please click the link below to confirm your email. <br>
+                            <a href=${process.env.URI}/api/verify/${data._userId}/${data.token}>Verify your email</a><br>
+                            Thank you for creating your account!`
+                };
+
+                transporter.sendMail(mailOptions, (error, response) => {
+                    if (error) {
+                        console.log(error);
+                    } else {
+                        return res.status(200).json({
+                            status: 200,
+                            message: "Email verification sent."
+                        })
+                    }
+                })
+            }
+        )
+
+    } catch (error) {
+        return res.status(500).json({
+            status: 500,
+            message: error
+        })
+    }
+}

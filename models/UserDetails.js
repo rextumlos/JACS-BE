@@ -9,13 +9,13 @@ const UserDetails = new mongoose.Schema({
     firstName: {
         type: String,
         required: true,
-    }, 
+    },
     lastName: {
         type: String,
         required: true,
     },
     email: {
-        type: String, 
+        type: String,
         required: true,
     },
     contactNo: {
@@ -25,6 +25,17 @@ const UserDetails = new mongoose.Schema({
     img: {
         type: String,
     },
+}, {
+    toJSON: {
+        transform: function (doc, ret) {
+            delete ret._id;
+        }
+    },
+    toObject: {
+        transform: function (doc, ret) {
+            delete ret._id;
+        }
+    }
 })
 
 UserDetails.plugin(mongoosePaginate);

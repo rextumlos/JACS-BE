@@ -12,7 +12,7 @@ exports.getUserTokenByUserId = async (req, res, next, id) => {
         else if (!user)
             return res.status(400).json({
                 status: 400,
-                message: "User not found."
+                message: "Invalid link or expired."
             })
         else {
             req.emailToken = user._doc;

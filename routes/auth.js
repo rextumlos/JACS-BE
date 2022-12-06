@@ -1,8 +1,8 @@
 const router = require("express").Router();
 const { body, validationResult } = require("express-validator");
-const { register, login } = require("../controllers/auth");
-const { verifyEmailToken, getTokenByUserId, getUserTokenByUserId } = require("../utils/emailVerification");
-
+const { register, login, forgotpassword, confirmchangepass, resetpassword } = require("../controllers/auth");
+const { resendverification } = require("../controllers/userDetails");
+const { verifyEmailToken, getUserTokenByUserId } = require("../utils/emailVerification");
 
 // Register
 router.post("/register", [
@@ -19,5 +19,14 @@ router.post("/login", [
 router.param("userId", getUserTokenByUserId);
 // Verify
 router.get("/verify/:userId/:token", verifyEmailToken);
+router.post("/resend",[
+  body("email").isEmail().withMessage("Must be an email.")
+], resendverification);
+
+// Forgot password
+router.post("/forgotpassword", [
+  body("email").isEmail().withMessage("Must be an email.")
+], forgotpassword);
+router.put("/resetpassword/:userId/:token", resetpassword);
 
 module.exports = router;
