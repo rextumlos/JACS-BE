@@ -47,10 +47,10 @@ const TechnicianSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    certOfTrainings: [{
-        type: String,
+    certOfTrainings: {
+        type: [String],
         required: true,
-    }],
+    },
 },
     { timestamps: true }
 )

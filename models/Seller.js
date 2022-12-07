@@ -7,34 +7,33 @@ const SellerSchema = new mongoose.Schema({
         ref: "User",
         required: true,
     },
-    storeName: {
-        type: String,
-        required: true,
-    },
-    contactNo: {
-        type: Number,
-        required: true,
-    },
-    email: {
-        type: String,
-        required: true,
-    },
-    type: {
+    typeOfSeller: {
         type: String,
         enum: {
-            values: ['micro', 'corporate'],
-            message: "Type is required. [Micro or Corporate Seller]",
+            values: ['MICRO', 'CORPORATE'],
+            uppercase: true,
+            message: "Seller type is required. [MICRO, CORPORATE]",
         },
         required: true,
     },
     governId: {
-        type: String,
+        type: [String],
+        match: /^.{5,}$/,
         required: true,
     },
-    proofOfBankAccount: {
-        type: String,
+    proofOfBankAcc: {
+        type: [String],
+        match: /^.{5,}$/,
         required: true,
     },
+    isApproved: {
+        type: String,
+        enum: {
+            values: ['PENDING', 'APPROVED', 'REJECTED', 'UPDATED'],
+            uppercase: true,
+        },
+        default: 'PENDING',
+    }
 },
     { timestamps: true }
 )

@@ -17,7 +17,7 @@ router.get("/users/all", verifyTokenAndAdmin, getAllUsers);
 // Get user statistics
 router.get("/users/stats", verifyTokenAndAdmin, getUserStatistics);
 // Get user
-router.get("/users/:userId", verifyTokenAndAdmin, getUser);
+router.get("/users/:userId", verifyTokenAndAuthorization, getUser);
 // Update user
 router.put("/users/:userId", verifyTokenAndAuthorization, updateUser);
 // Delete user

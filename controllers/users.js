@@ -58,6 +58,14 @@ exports.updateUser = async (req, res) => {
         ).toString();
     }
 
+    if (req.body.isAdmin || req.body.isVerified || req.body.isSeller || req.body.isTech || req.body.isDeactivated) {
+        if (!req.user.isAdmin)
+            return res.status(401).json({
+                status: 401,
+                message: "Access Denied."
+            })
+    }
+
     try {
         const updatedUser = await User.findByIdAndUpdate(
             req.profile._id,
@@ -82,7 +90,7 @@ exports.deleteUser = async (req, res) => {
 
     try {
         await User.findByIdAndDelete(id);
-        await UserDetails.findOneAndDelete({userId: id});
+        await UserDetails.findOneAndDelete({ _userId: id });
         return res.status(200).json({
             status: 200,
             message: `User ${id} has been successfully deleted.`,

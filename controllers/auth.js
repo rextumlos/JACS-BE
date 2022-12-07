@@ -18,6 +18,13 @@ exports.register = async (req, res) => {
     })
   }
 
+  if (req.body.isAdmin || req.body.isVerified || req.body.isSeller || req.body.isTech || req.body.isDeactivated) {
+    return res.status(401).json({
+      status: 401,
+      message: "Access Denied."
+    })
+  }
+
   const newUser = new User({
     username: req.body.username,
     password: CryptoJS.AES.encrypt(

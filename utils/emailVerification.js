@@ -41,43 +41,43 @@ exports.verifyEmailToken = async (req, res) => {
     })
 }
 
-exports.verifySellerToken = async (req, res) => {
-    const { token } = req.params;
-    const emailToken = req.emailToken;
+// exports.verifySellerToken = async (req, res) => {
+//     const { token } = req.params;
+//     const emailToken = req.emailToken;
 
-    checkToken(emailToken.token, token);
+//     checkToken(emailToken.token, token);
 
-    const verifyUser = await User.findByIdAndUpdate(
-        emailToken._userId.toString(),
-        {
-            isSeller: true,
-        },
-        { new: true }
-    )
+//     const verifyUser = await User.findByIdAndUpdate(
+//         emailToken._userId.toString(),
+//         {
+//             isSeller: true,
+//         },
+//         { new: true }
+//     )
 
-    return res.status(200).json({
-        status: 200,
-        message: `User "${verifyUser.username}" has been verified as SELLER successfully.`,
-    })
-}
-exports.verifyTechinicianToken = async (req, res) => {
-    const { token } = req.params;
-    const emailToken = req.emailToken;
+//     return res.status(200).json({
+//         status: 200,
+//         message: `User "${verifyUser.username}" has been verified as SELLER successfully.`,
+//     })
+// }
+// exports.verifyTechinicianToken = async (req, res) => {
+//     const { token } = req.params;
+//     const emailToken = req.emailToken;
     
-    checkToken(emailToken.token, token);
+//     checkToken(emailToken.token, token);
 
-    const verifyUser = await User.findByIdAndUpdate(
-        emailToken._userId.toString(),
-        {
-            isTech: true,
-        },
-        { new: true }
-    )
-    return res.status(200).json({
-        status: 200,
-        message: `User "${verifyUser.username}" has been verified as TECHNICIAN successfully.`,
-    })
-}
+//     const verifyUser = await User.findByIdAndUpdate(
+//         emailToken._userId.toString(),
+//         {
+//             isTech: true,
+//         },
+//         { new: true }
+//     )
+//     return res.status(200).json({
+//         status: 200,
+//         message: `User "${verifyUser.username}" has been verified as TECHNICIAN successfully.`,
+//     })
+// }
 
 const checkToken = (check, token) => {
     if (check !== token)

@@ -33,7 +33,7 @@ exports.getUserDetail = async (req, res) => {
     const id = _id.toString();
 
     try {
-        const userDetail = await UserDetails.findOne({ userId: id });
+        const userDetail = await UserDetails.findOne({ _userId: id });
         if (!userDetail) {
             return res.status(400).json({
                 status: 400,
@@ -69,7 +69,7 @@ exports.addUserDetail = async (req, res) => {
     const { _id } = req.profile;
     const id = _id.toString();
 
-    const checkIfDetailExists = await UserDetails.findOne({ userId: id });
+    const checkIfDetailExists = await UserDetails.findOne({ _userId: id });
     if (checkIfDetailExists)
         return res.status(400).json({
             status: 400,
@@ -84,9 +84,9 @@ exports.addUserDetail = async (req, res) => {
         })
 
     try {
-        const userId = id;
+        const _userId = id;
         const newUserDetail = new UserDetails({
-            userId,
+            _userId,
             ...req.body
         })
 
@@ -100,7 +100,7 @@ exports.addUserDetail = async (req, res) => {
             }
 
             EmailToken.findOneAndUpdate(
-                { _userId: userId },
+                { _userId: _userId },
                 {
                     token: crypto.randomBytes(16).toString("hex"),
                     expires: "15m",
@@ -180,7 +180,7 @@ exports.updateUserDetail = async (req, res) => {
 
     try {
         const updatedUserDetail = await UserDetails.findOneAndUpdate(
-            { userId: id },
+            { _userId: id },
             {
                 $set: req.body,
             },
@@ -201,7 +201,7 @@ exports.deleteUserDetail = async (req, res) => {
     const id = _id.toString();
 
     try {
-        await UserDetails.findOneAndDelete({ userId: id });
+        await UserDetails.findOneAndDelete({ _userId: id });
         return res.status(200).json({
             status: 200,
             message: `User ${id} has been successfully deleted.`,
@@ -231,7 +231,7 @@ exports.resendverification = async (req, res) => {
             })
 
         EmailToken.findOneAndUpdate(
-            { _userId: findUser.userId },
+            { _userId: findUser._userId },
             {
                 token: crypto.randomBytes(16).toString("hex"),
                 expires: "15m",

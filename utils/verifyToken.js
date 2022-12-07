@@ -23,8 +23,7 @@ const verifyToken = (req, res, next) => {
 
 const verifyTokenAndAuthorization = (req, res, next) => {
     verifyToken(req, res, () => {
-        const { _id } = req.profile;
-        if (req.user.id === _id.toString() || req.user.isAdmin) {
+        if (req.user.id === req.params.userId || req.user.isAdmin) {
             next();
         } else {
             res.status(403).json({
@@ -48,4 +47,32 @@ const verifyTokenAndAdmin = (req, res, next) => {
     })
 }
 
-module.exports = { verifyToken, verifyTokenAndAuthorization, verifyTokenAndAdmin };
+const verifyTokenAndSellerAuthorization = (req, res, next) => {
+    verifyToken(req, res, () => {
+        const { _id } = req.profile;
+        if (req.user.id === _id.toString() && req.user.isSeller || req.user.isAdmin) {
+            next();
+        } else {
+            res.status(403).json({
+                status: 403,
+                message: "Access denied."
+            })
+        }
+    })
+}
+
+const verifyTokenAndTechnicianAuthorization = (req, res, next) => {
+    verifyToken(req, res, () => {
+        const { _id } = req.profile;
+        if (req.user.id === _id.toString() && req.user.isTechnician || req.user.isAdmin) {
+            next();
+        } else {
+            res.status(403).json({
+                status: 403,
+                message: "Access denied."
+            })
+        }
+    })
+}
+
+module.exports = { verifyToken, verifyTokenAndAuthorization, verifyTokenAndAdmin, verifyTokenAndSellerAuthorization, verifyTokenAndTechnicianAuthorization };
