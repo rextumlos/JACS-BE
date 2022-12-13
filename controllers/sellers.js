@@ -1,9 +1,9 @@
 const User = require("../models/User");
 const UserDetails = require("../models/UserDetails");
 const Seller = require("../models/Seller");
+const { sendEmail } = require("../utils/sendEmail");
 const { validationResult } = require("express-validator");
-
-const nodemailer = require("nodemailer");
+const SellerDetails = require("../models/SellerDetails");
 
 exports.getSellerByUserId = (req, res, next, id) => {
     UserDetails.findOne({ userId: id }).exec((error, user) => {
@@ -119,7 +119,7 @@ exports.addSellerById = async (req, res) => {
                         Thank you! <br><br>
                         <strong>Just Another Computer Shop. JACS. 2022</strong>`;
 
-        await sendEmail(user.email, title, body);
+        sendEmail(user.email, title, body);
 
         return res.status(200).json({
             status: 200,
@@ -205,6 +205,7 @@ exports.deleteSellerById = async (req, res) => {
 
     try {
         await Seller.findOneAndDelete({ _userId: user._userId });
+        await SellerDetails.findOneAndDelete({ _userId: user._userId});
         return res.status(200).json({
             status: 200,
             message: `Seller successfully deleted.`
@@ -280,29 +281,4 @@ exports.rejectSeller = async (req, res) => {
             message: error
         })
     }
-}
-
-const sendEmail = (receiver, title, body) => {
-    const transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-            user: process.env.GMAIL_EMAIL,
-            pass: process.env.GMAIL_PASS,
-        }
-    });
-
-    const mailOptions = {
-        from: process.env.GMAIL_EMAIL,
-        to: receiver,
-        subject: title,
-        html: body
-    };
-
-    transporter.sendMail(mailOptions, (error, response) => {
-        if (error) {
-            console.log(error);
-        } else {
-            console.log("Email sent.");
-        }
-    })
 }

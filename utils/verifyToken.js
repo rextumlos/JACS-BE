@@ -55,7 +55,7 @@ const verifyTokenAndSellerAuthorization = (req, res, next) => {
         } else {
             res.status(403).json({
                 status: 403,
-                message: "Access denied."
+                message: "You are not a seller."
             })
         }
     })
@@ -69,7 +69,7 @@ const verifyTokenAndTechnicianAuthorization = (req, res, next) => {
         } else {
             res.status(403).json({
                 status: 403,
-                message: "Access denied."
+                message: "You are not a technician."
             })
         }
     })

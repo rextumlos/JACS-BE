@@ -5,6 +5,7 @@ const UserDetails = require("../models/UserDetails");
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 const { validationResult } = require("express-validator");
+const { sendEmail } = require("../utils/sendEmail");
 
 exports.getAllUserDetails = async (req, res) => {
     let { query, page = 1, limit = 10 } = req.query;
@@ -128,6 +129,7 @@ exports.addUserDetail = async (req, res) => {
                         subject: "Email confirmation",
                         html: `Please click the link below to confirm your email. <br>
                             <a href=${process.env.URI}/api/verify/${data._userId}/${data.token}>Verify your email</a><br>
+                            Please note that if you change your email in future, you will need to verify it again.<br><br>
                             Thank you for creating your account!`
                     };
 
@@ -187,12 +189,59 @@ exports.updateUserDetail = async (req, res) => {
             { new: true }
         );
 
-        return res.status(200).json({
-            status: 200,
-            message: "User detail updated!",
-        });
+        if (updatedUserDetail.email) {
+            const account = await User.findByIdAndUpdate(
+                updatedUserDetail._userId,
+                {
+                    isVerified: false,
+                },
+                { new: true }
+            )
+
+            EmailToken.findOneAndUpdate(
+                { _userId: updatedUserDetail._userId },
+                {
+                    token: crypto.randomBytes(16).toString("hex"),
+                    expires: "15m",
+                },
+                { upsert: true, new: true, setDefaultsOnInsert: true },
+                (error, data) => {
+
+                    if (error) {
+                        return res.status(400).json({
+                            status: 400,
+                            message: error,
+                        })
+                    }
+
+                    const title = "Updated Email Verification";
+                    const body = `Hello ${account.username}! <br><br>
+                                    We noticed that you have changed your email. <br><br>
+                                    Please click the link below to re-confirm your seller email. <br>
+                                    <a href=${process.env.URI}/api/verify/${data._userId}/${data.token}>Re-verify my email!</a><br>
+                                    Please note that if you change your email in future, you will need to verify it again.<br><br>
+                                    Thank you and have a good day!<br><br>
+                                    <strong>Just Another Computer Shop. JACS. 2022</strong>`;
+
+                    sendEmail(updatedUserDetail.email, title, body);
+
+                    return res.status(200).json({
+                        status: 200,
+                        message: "User detail updated! Please re-confirm your email.",
+                    });
+                }
+            )
+        } else
+            return res.status(200).json({
+                status: 200,
+                message: "User detail updated!",
+            });
+
     } catch (error) {
-        return res.status(500).json(error);
+        return res.status(500).json({
+            status: 500,
+            message: error
+        });
     }
 }
 

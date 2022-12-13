@@ -19,6 +19,13 @@ const SellerDetailsSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    isEmailConfirmed: {
+        type: Boolean,
+        default: false,
+    },
+    img: {
+        type: String
+    }
 },
     { timestamps: true }
 )
