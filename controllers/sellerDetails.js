@@ -4,6 +4,7 @@ const EmailToken = require("../models/EmailToken");
 const { sendEmail } = require("../utils/sendEmail");
 const { validationResult } = require("express-validator");
 const UserDetails = require("../models/UserDetails");
+const crypto = require("crypto");
 
 const checkUser = async (user) => {
     const checkIfSeller = await User.findOne({ _id: user._userId })
@@ -57,7 +58,7 @@ exports.getAllSellerDetails = async (req, res) => {
 
 exports.getSellerDetailsById = async (req, res) => {
 
-    const user = req.profile;
+    const user = req.seller;
     checkUser(user);
 
     try {
@@ -92,7 +93,7 @@ exports.addSellerDetailsById = async (req, res) => {
         })
     }
 
-    const user = req.profile;
+    const user = req.seller;
     checkUser(user);
 
     const checkSeller = await SellerDetails.findOne({ _userId: user._userId });
@@ -101,6 +102,14 @@ exports.addSellerDetailsById = async (req, res) => {
             status: 400,
             message: `Seller details are already exists.`
         });
+
+    if (req.body.isEmailConfirmed) {
+        if (!req.user.isAdmin)
+            return res.status(401).json({
+                status: 400,
+                message: `Access denied.`
+            });
+    }
 
     try {
         const { storeName, contactNo, email } = req.body;
@@ -112,13 +121,7 @@ exports.addSellerDetailsById = async (req, res) => {
             email: email,
         });
 
-        newSellerDetail.save().exec((errors) => {
-            if (errors)
-                return res.status(500).json({
-                    status: 500,
-                    message: errors
-                })
-
+        newSellerDetail.save().then(() => {
             EmailToken.findOneAndUpdate(
                 { _userId: user._userId },
                 {
@@ -137,7 +140,7 @@ exports.addSellerDetailsById = async (req, res) => {
                     const title = "Seller Email Verification";
                     const body = `Hello ${user.firstName} ${user.lastName}! <br><br>
                         Please click the link below to confirm your seller email. <br>
-                        <a href=${process.env.URI}/api/seller/verify/${data._userId}/${data.token}>Verify my seller email!</a><br>
+                        <a href=${process.env.URI}/api/sellers/verify/${data._userId.toString()}/${data.token}>Verify my seller email!</a><br>
                         Please note that all of your updates about your seller account will be sent on this email.<br><br>
                         Thank you and have a good day!<br><br>
                         <strong>Just Another Computer Shop. JACS. 2022</strong>`;
@@ -162,10 +165,18 @@ exports.addSellerDetailsById = async (req, res) => {
 }
 
 exports.updateSellerDetailsById = async (req, res) => {
-    const user = req.profile;
+    const user = req.seller;
     checkUser(user);
 
-    if (req.body.email) {
+    if (req.body.isEmailConfirmed) {
+        if (!req.user.isAdmin)
+            return res.status(401).json({
+                status: 400,
+                message: `Access denied.`
+            });
+    }
+
+    if (req.body.email !== undefined) {
         let regexp = /\S+@\S+\.\S+/;
         regexp.test(req.body.email)
         if (!regexp)
@@ -191,9 +202,9 @@ exports.updateSellerDetailsById = async (req, res) => {
             { new: true }
         );
 
-        if (updatedSellerDetail.email) {
-            const account = await SellerDetails.findByIdAndUpdate(
-                updatedSellerDetail._userId,
+        if (req.body.email !== undefined) {
+            const account = await SellerDetails.findOneAndUpdate(
+                { _userId: updatedSellerDetail._userId },
                 {
                     isEmailConfirmed: false,
                 },
@@ -217,15 +228,15 @@ exports.updateSellerDetailsById = async (req, res) => {
                     }
 
                     const title = "Updated seller email verification";
-                    const body = `Hello ${account.username}! <br><br>
+                    const body = `Hello ${account.storeName}! <br><br>
                                     We noticed that you have changed your email. <br><br>
                                     Please click the link below to re-confirm your seller email. <br>
-                                    <a href=${process.env.URI}/api/verify/${data._userId}/${data.token}>Re-verify my email!</a><br>
+                                    <a href=${process.env.URI}/api/sellers/verify/${data._userId.toString()}/${data.token}>Re-verify my email!</a><br>
                                     Please note that if you change your email in future, you will need to verify it again.<br><br>
                                     Thank you and have a good day!<br><br>
                                     <strong>Just Another Computer Shop. JACS. 2022</strong>`;
 
-                    sendEmail(updatedUserDetail.email, title, body);
+                    sendEmail(updatedSellerDetail.email, title, body);
 
                     return res.status(200).json({
                         status: 200,
@@ -249,7 +260,7 @@ exports.updateSellerDetailsById = async (req, res) => {
 }
 
 exports.deleteSellerDetailsById = async (req, res) => {
-    const user = req.profile;
+    const user = req.seller;
     checkUser(user);
 
     try {
@@ -283,10 +294,14 @@ exports.resendSellerEmail = async (req, res) => {
         if (!findUser)
             return res.status(400).json({
                 status: 400,
-                message: "Sorry, there is no user using the email you have input."
+                message: "Sorry, there is no seller using the email you have input."
             })
 
-        const user = await UserDetails.findOne({ _userId: findUser._userId });
+        if (findUser.isEmailConfirmed)
+            return res.status(400).json({
+                status: 400,
+                message: "Your email is already verified."
+            })
 
         EmailToken.findOneAndUpdate(
             { _userId: findUser._userId },
@@ -304,9 +319,9 @@ exports.resendSellerEmail = async (req, res) => {
                 }
 
                 const title = "Seller Email Verification";
-                const body = `Hello ${user.firstName} ${user.lastName}! <br><br>
+                const body = `Hello ${findUser.storeName}! <br><br>
                         Please click the link below to confirm your seller email. <br>
-                        <a href=${process.env.URI}/api/verify/${data._userId}/${data.token}>Verify your seller email!</a><br>
+                        <a href=${process.env.URI}/api/sellers/verify/${data._userId}/${data.token}>Verify your seller email!</a><br>
                         Please note that all of your updates about your seller account will be sent on this email.<br><br>
                         Thank you and have a good day!<br><br>
                         <strong>Just Another Computer Shop. JACS. 2022</strong>`;

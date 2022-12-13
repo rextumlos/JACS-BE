@@ -3,10 +3,19 @@ const { getAllSellerDetails, updateSellerDetailsById, addSellerDetailsById, dele
 const { getSellerById, addSellerById, updateSellerById, deleteSellerById, getAllSellers, getSellerByUserId, confirmSeller, rejectSeller } = require("../controllers/sellers");
 const { verifyTokenAndAuthorization, verifyTokenAndAdmin, verifyTokenAndSellerAuthorization } = require("../utils/verifyToken");
 const router = express.Router();
-const { body, validationResult } = require("express-validator");
+const { body, check, validationResult } = require("express-validator");
 const { getUserTokenByUserId ,verifySellerToken } = require("../utils/emailVerification");
 
 router.param("userId", getSellerByUserId);
+
+// Seller email verification
+router.param("sellerId", getUserTokenByUserId);
+
+router.get("/sellers/verify/:sellerId/:token", verifySellerToken);
+router.post("/sellers/resend",[
+    body("email").isEmail().withMessage("Must be an email.")
+  ], resendSellerEmail);
+
 // Get All Sellers
 router.get("/sellers/all", verifyTokenAndAdmin, getAllSellers);
 // Sellers CRUD Operations
@@ -30,18 +39,23 @@ router.get("/sellers", getAllSellerDetails);
 router.route("/sellers/:userId/details")
     .get(getSellerDetailsById)
     .post(verifyTokenAndSellerAuthorization, [
-        body("storeName", "Store Name is required.").isLength({ min: 1 }),
-        body("contactNo").isMobilePhone().withMessage("Contact number is required."),
-        body("email").isEmail().withMessage("Must be an email."),
+        body("storeName", "Store Name is required.")
+            .isLength({ min: 1 }),
+        body("contactNo")
+            .isMobilePhone().withMessage("Contact number is required."),
+        body("email")
+            .isEmail().withMessage("Must be an email."),
     ], addSellerDetailsById)
-    .put(verifyTokenAndSellerAuthorization, updateSellerDetailsById)
+    .put(verifyTokenAndSellerAuthorization,[
+        check("storeName")
+            .isLength({ min: 1 }).withMessage("Must be at least 1 chars long."),
+        check("contactNo")
+            .isMobilePhone().withMessage("Must be a mobile number."),
+        check("email")
+            .isEmail().withMessage("Must be an email.")
+    ], updateSellerDetailsById)
     .delete(verifyTokenAndSellerAuthorization, deleteSellerDetailsById);
 
-// Seller email verification
-router.param("sellerId", getUserTokenByUserId);
-router.get("/seller/verify/:sellerId/:token", verifySellerToken);
-router.post("/seller/resendEmail",[
-    body("email").isEmail().withMessage("Must be an email.")
-  ], resendSellerEmail);
+
 
 module.exports = router;

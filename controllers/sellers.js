@@ -6,7 +6,7 @@ const { validationResult } = require("express-validator");
 const SellerDetails = require("../models/SellerDetails");
 
 exports.getSellerByUserId = (req, res, next, id) => {
-    UserDetails.findOne({ userId: id }).exec((error, user) => {
+    UserDetails.findOne({ _userId: id }).exec((error, user) => {
         if (error)
             return res.status(400).json({
                 status: 400,
@@ -18,7 +18,7 @@ exports.getSellerByUserId = (req, res, next, id) => {
                 message: "User not found."
             })
         else {
-            req.profile = user._doc;
+            req.seller = user._doc;
             next();
         }
     })
@@ -50,7 +50,7 @@ exports.getAllSellers = async (req, res) => {
 }
 
 exports.getSellerById = async (req, res) => {
-    const user = req.profile;
+    const user = req.seller;
     const checkIfSeller = await User.findOne({ _id: user._userId })
     if (!checkIfSeller)
         return res.status(400).json({
@@ -91,7 +91,7 @@ exports.addSellerById = async (req, res) => {
         })
     }
 
-    const user = req.profile;
+    const user = req.seller;
 
     const checkSeller = await Seller.findOne({ _userId: user._userId });
     if (checkSeller)
@@ -142,7 +142,7 @@ exports.addSellerById = async (req, res) => {
 }
 
 exports.updateSellerById = async (req, res) => {
-    const user = req.profile;
+    const user = req.seller;
 
     const checkSeller = await Seller.findOne({ _userId: user._userId });
     if (!checkSeller)
@@ -194,7 +194,7 @@ exports.updateSellerById = async (req, res) => {
 }
 
 exports.deleteSellerById = async (req, res) => {
-    const user = req.profile;
+    const user = req.seller;
 
     const checkSeller = await Seller.findOne({ _userId: user._userId });
     if (!checkSeller)
@@ -221,7 +221,7 @@ exports.deleteSellerById = async (req, res) => {
 }
 
 exports.confirmSeller = async (req, res) => {
-    const user = req.profile;
+    const user = req.seller;
 
     try {
         const account = await User.findById(user._userId);
@@ -253,7 +253,7 @@ exports.confirmSeller = async (req, res) => {
 }
 
 exports.rejectSeller = async (req, res) => {
-    const user = req.profile;
+    const user = req.seller;
 
     try {
         const account = await User.findById(user._userId);

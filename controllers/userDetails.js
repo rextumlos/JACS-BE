@@ -163,9 +163,9 @@ exports.updateUserDetail = async (req, res) => {
     const { _id } = req.profile;
     const id = _id.toString();
 
-    if (req.body.email) {
+    if (req.body.email !== undefined) {
         let regexp = /\S+@\S+\.\S+/;
-        regexp.test(req.body.email)
+        regexp.test(req.body.email !== undefined)
         if (!regexp)
             return res.status(400).json({
                 status: 400,
@@ -189,7 +189,7 @@ exports.updateUserDetail = async (req, res) => {
             { new: true }
         );
 
-        if (updatedUserDetail.email) {
+        if (req.body.email !== undefined) {
             const account = await User.findByIdAndUpdate(
                 updatedUserDetail._userId,
                 {

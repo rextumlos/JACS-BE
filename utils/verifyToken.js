@@ -49,8 +49,8 @@ const verifyTokenAndAdmin = (req, res, next) => {
 
 const verifyTokenAndSellerAuthorization = (req, res, next) => {
     verifyToken(req, res, () => {
-        const { _id } = req.profile;
-        if (req.user.id === _id.toString() && req.user.isSeller || req.user.isAdmin) {
+        const { _userId } = req.seller;
+        if (req.user.id === _userId.toString() && req.user.isSeller || req.user.isAdmin) {
             next();
         } else {
             res.status(403).json({

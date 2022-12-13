@@ -26,8 +26,6 @@ exports.verifyEmailToken = async (req, res) => {
     const { token } = req.params;
     const emailToken = req.emailToken;
 
-    checkToken(emailToken.token, token);
-
     try {
         const checkUser = await User.findById(emailToken._userId)
         if (!checkUser)
@@ -49,6 +47,8 @@ exports.verifyEmailToken = async (req, res) => {
             { new: true }
         )
 
+        await EmailToken.findOneAndDelete({ _userId: emailToken._userId });
+
         return res.status(200).json({
             status: 200,
             message: `User "${verifyUser.username}" has been verified successfully.`,
@@ -67,20 +67,33 @@ exports.verifySellerToken = async (req, res) => {
     const { token } = req.params;
     const emailToken = req.emailToken;
 
-    checkToken(emailToken.token, token);
+    const checkUser = await SellerDetails.findOne({ _userId: emailToken._userId })
+ 
+    if (!checkUser)
+        return res.status(400).json({
+            status: 200,
+            message: `Seller not found.`,
+        })
+    if (checkUser.isEmailConfirmed)
+        return res.status(400).json({
+            status: 200,
+            message: `Store "${checkUser.storeName}" is already verified.`,
+        })
 
     try {
-        const verifyUser = await SellerDetails.findByIdAndUpdate(
-            emailToken._userId.toString(),
+        const verifyUser = await SellerDetails.findOneAndUpdate(
+            { _userId: emailToken._userId },
             {
                 isEmailConfirmed: true,
             },
             { new: true }
         )
 
+        await EmailToken.findOneAndDelete({ _userId: emailToken._userId });
+
         return res.status(200).json({
             status: 200,
-            message: `Seller email of "${verifyUser.username}" has been verified successfully.`,
+            message: `Seller email of "${verifyUser.storeName}" has been verified successfully.`,
             result: verifyUser,
         })
     } catch (error) {
@@ -110,11 +123,3 @@ exports.verifySellerToken = async (req, res) => {
 //         message: `User "${verifyUser.username}" has been verified as TECHNICIAN successfully.`,
 //     })
 // }
-
-const checkToken = (check, token) => {
-    if (check !== token)
-        return res.status(403).json({
-            status: 403,
-            message: "Invalid link or expired."
-        })
-}
