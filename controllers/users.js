@@ -1,6 +1,9 @@
 const User = require("../models/User");
 const CryptoJS = require("crypto-js");
 const UserDetails = require("../models/UserDetails");
+const mongoose = require("mongoose");
+const { BSONTypeError } = require("bson");
+const { validationResult } = require("express-validator");
 
 exports.getUserById = (req, res, next, id) => {
     User.findById(id).exec((error, user) => {
@@ -85,17 +88,36 @@ exports.updateUser = async (req, res) => {
 }
 
 exports.deleteUser = async (req, res) => {
-    const { _id } = req.profile;
-    const id = _id.toString();
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({
+            status: 400,
+            message: errors.array()[0].msg
+        })
+    }
 
     try {
+        const id = mongoose.Types.ObjectId(req.body.id.trim());
+        const checkUser = await User.findById(id);
+        if (!checkUser)
+            return res.status(400).json({
+                status: 200,
+                message: `User not found.`,
+            });
+
         await User.findByIdAndDelete(id);
         await UserDetails.findOneAndDelete({ _userId: id });
         return res.status(200).json({
             status: 200,
             message: `User ${id} has been successfully deleted.`,
         });
+
     } catch (error) {
+        if (error instanceof BSONTypeError)
+            return res.status(400).json({
+                status: 400,
+                message: "Must be valid id of user."
+            });
         return res.status(500).json(error);
     }
 }

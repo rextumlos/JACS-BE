@@ -6,7 +6,10 @@ const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 const { validationResult } = require("express-validator");
 const { sendEmail } = require("../utils/sendEmail");
+const mongoose = require("mongoose");
+const { BSONTypeError } = require("bson");
 
+// Get all user details
 exports.getAllUserDetails = async (req, res) => {
     let { query, page = 1, limit = 10 } = req.query;
 
@@ -29,6 +32,7 @@ exports.getAllUserDetails = async (req, res) => {
     }
 }
 
+// Get a User Detail
 exports.getUserDetail = async (req, res) => {
     const { _id } = req.profile;
     const id = _id.toString();
@@ -58,6 +62,7 @@ exports.getUserDetail = async (req, res) => {
 
 }
 
+// Add User Detail
 exports.addUserDetail = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -67,8 +72,8 @@ exports.addUserDetail = async (req, res) => {
         })
     }
 
-    const { _id } = req.profile;
-    const id = _id.toString();
+    const { _userId, ...body } = req.body;
+    const id = mongoose.Types.ObjectId(_userId.trim());
 
     const checkIfDetailExists = await UserDetails.findOne({ _userId: id });
     if (checkIfDetailExists)
@@ -85,14 +90,12 @@ exports.addUserDetail = async (req, res) => {
         })
 
     try {
-        const _userId = id;
         const newUserDetail = new UserDetails({
-            _userId,
-            ...req.body
+            _userId: id,
+            ...body
         })
 
-        await newUserDetail.save(async error => {
-            // Email Verification
+        newUserDetail.save(async error => {
             if (error) {
                 return res.status(400).json({
                     status: 400,
@@ -114,51 +117,38 @@ exports.addUserDetail = async (req, res) => {
                             message: error,
                         })
                     }
+                    const title = "Email confirmation";
+                    const body = `Please click the link below to confirm your email. <br>
+                        <a href=${process.env.URI}/api/verify/${data._userId}/${data.token}>Verify your email</a><br>
+                        Please note that if you change your email in future, you will need to verify it again.<br><br>
+                        Thank you for creating your account!`;
 
-                    const transporter = nodemailer.createTransport({
-                        service: "gmail",
-                        auth: {
-                            user: process.env.GMAIL_EMAIL,
-                            pass: process.env.GMAIL_PASS,
-                        }
-                    });
-
-                    const mailOptions = {
-                        from: process.env.GMAIL_EMAIL,
-                        to: newUserDetail.email,
-                        subject: "Email confirmation",
-                        html: `Please click the link below to confirm your email. <br>
-                            <a href=${process.env.URI}/api/verify/${data._userId}/${data.token}>Verify your email</a><br>
-                            Please note that if you change your email in future, you will need to verify it again.<br><br>
-                            Thank you for creating your account!`
-                    };
-
-                    transporter.sendMail(mailOptions, (error, response) => {
-                        if (error) {
-                            console.log(error);
-                        } else {
-                            console.log("Email verification sent.");
-                        }
-                    })
+                    sendEmail(newUserDetail.email, title, body);
                 }
             )
-        })
 
-        res.status(201).json({
-            status: 201,
-            message: `User detail added for User ${id}!`
+            res.status(201).json({
+                status: 201,
+                message: `User detail added for User ${id}! We sent a mail on your email to verify your account. Please verify it.`
+            })
         })
 
     } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            status: 500,
-            message: error
-        })
+        if (error instanceof BSONTypeError)
+            return res.status(400).json({
+                status: 400,
+                message: "Must be valid id of user."
+            });
+        else
+            res.status(500).json({
+                status: 500,
+                message: error
+            })
     }
 
 }
 
+// Update User Detail
 exports.updateUserDetail = async (req, res) => {
     const { _id } = req.profile;
     const id = _id.toString();
@@ -245,21 +235,41 @@ exports.updateUserDetail = async (req, res) => {
     }
 }
 
+// Delete User Detail
 exports.deleteUserDetail = async (req, res) => {
-    const { _id } = req.profile;
-    const id = _id.toString();
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({
+            status: 400,
+            message: errors.array()[0].msg
+        })
+    }
 
     try {
-        await UserDetails.findOneAndDelete({ _userId: id });
+        const id = req.body.id.trim();
+
+        await UserDetails.deleteOne({ _userId: mongoose.Types.ObjectId(id) })
+
         return res.status(200).json({
             status: 200,
-            message: `User ${id} has been successfully deleted.`,
-        });
+            message: `User ${id} has been deleted successfully.`
+        })
+
     } catch (error) {
-        return res.status(500).json(error);
+        if (error instanceof BSONTypeError)
+            return res.status(400).json({
+                status: 400,
+                message: "Must be valid id of user."
+            });
+        else
+            return res.status(500).json({
+                status: 500,
+                message: error
+            });
     }
 }
 
+// Resend Email Verification
 exports.resendverification = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -294,33 +304,17 @@ exports.resendverification = async (req, res) => {
                     })
                 }
 
-                const transporter = nodemailer.createTransport({
-                    service: "gmail",
-                    auth: {
-                        user: process.env.GMAIL_EMAIL,
-                        pass: process.env.GMAIL_PASS,
-                    }
-                });
-
-                const mailOptions = {
-                    from: process.env.GMAIL_EMAIL,
-                    to: findUser.email,
-                    subject: "Email confirmation",
-                    html: `Please click the link below to confirm your email. <br>
+                const title = "Email confirmation";
+                const body = `Please click the link below to confirm your email. <br>
                             <a href=${process.env.URI}/api/verify/${data._userId}/${data.token}>Verify your email</a><br>
-                            Thank you for creating your account!`
-                };
+                            Thank you for creating your account!`;
 
-                transporter.sendMail(mailOptions, (error, response) => {
-                    if (error) {
-                        console.log(error);
-                    } else {
-                        return res.status(200).json({
-                            status: 200,
-                            message: "Email verification sent."
-                        })
-                    }
-                })
+                sendEmail(findUser.email, title, body);
+
+                return res.status(200).json({
+                    status: 200,
+                    message: `Email verification resent.`
+                });
             }
         )
 

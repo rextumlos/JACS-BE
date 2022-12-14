@@ -4,24 +4,39 @@ const Seller = require("../models/Seller");
 const { sendEmail } = require("../utils/sendEmail");
 const { validationResult } = require("express-validator");
 const SellerDetails = require("../models/SellerDetails");
+const mongoose = require("mongoose");
+const { BSONTypeError } = require("bson");
 
 exports.getSellerByUserId = (req, res, next, id) => {
-    UserDetails.findOne({ _userId: id }).exec((error, user) => {
-        if (error)
+    try {
+        UserDetails.findOne({ _userId: mongoose.Types.ObjectId(id) }).exec((error, user) => {
+            if (error)
+                return res.status(400).json({
+                    status: 400,
+                    message: error
+                })
+            else if (!user)
+                return res.status(400).json({
+                    status: 400,
+                    message: "User not found."
+                })
+            else {
+                req.seller = user._doc;
+                next();
+            }
+        })
+
+    } catch (error) {
+        if (error instanceof BSONTypeError)
             return res.status(400).json({
                 status: 400,
-                message: error
-            })
-        else if (!user)
-            return res.status(400).json({
-                status: 400,
-                message: "User not found."
-            })
-        else {
-            req.seller = user._doc;
-            next();
-        }
-    })
+                message: "Must be valid id of user."
+            });
+        return res.status(500).json({
+            status: 500,
+            message: error
+        })
+    }
 }
 
 exports.getAllSellers = async (req, res) => {
@@ -91,9 +106,24 @@ exports.addSellerById = async (req, res) => {
         })
     }
 
-    const user = req.seller;
+    const { _userId, typeOfSeller, documents } = req.body
+    const id = mongoose.Types.ObjectId(_userId.trim())
 
-    const checkSeller = await Seller.findOne({ _userId: user._userId });
+    if (documents === undefined)
+        return res.status(400).json({
+            status: 400,
+            message: `Documents are required.`
+        });
+
+
+    const user = await UserDetails.findOne({ _userId: id });
+    if (!user)
+        return res.status(400).json({
+            status: 400,
+            message: `User not found.`
+        });
+
+    const checkSeller = await Seller.findOne({ _userId: id });
     if (checkSeller)
         return res.status(400).json({
             status: 400,
@@ -101,13 +131,10 @@ exports.addSellerById = async (req, res) => {
         });
 
     try {
-        const { typeOfSeller, governId, proofOfBankAcc } = req.body;
-
         const newSeller = new Seller({
-            _userId: user._userId,
+            _userId: id,
             typeOfSeller: typeOfSeller.toUpperCase(),
-            governId: governId,
-            proofOfBankAcc: proofOfBankAcc
+            documents: documents
         })
 
         await newSeller.save()
@@ -127,12 +154,17 @@ exports.addSellerById = async (req, res) => {
         });
 
     } catch (error) {
-        console.log(error);
         if (error.name === "ValidationError" && error.errors.typeOfSeller)
             return res.status(400).json({
                 status: 400,
                 message: error.errors.typeOfSeller.message
             })
+
+        if (error instanceof BSONTypeError)
+            return res.status(400).json({
+                status: 400,
+                message: "Must be valid id of user."
+            });
 
         return res.status(500).json({
             status: 500,
@@ -151,15 +183,39 @@ exports.updateSellerById = async (req, res) => {
             message: `Seller does not exist.`
         });
 
+    if (req.body.isApproved !== undefined) {
+        if (!req.user.isAdmin)
+            return res.status(401).json({
+                status: 401,
+                message: `Access denied.`
+            });
+    }
+
+    if (req.body.documents !== undefined) {
+        const docs = req.body.documents;
+        if (docs.length < 1)
+            return res.status(400).json({
+                status: 400,
+                message: `Documents cannot be empty.`
+            });
+
+        for (let i = 0; i < docs.length; i++) {
+            if (docs[i] === "")
+                return res.status(400).json({
+                    status: 400,
+                    message: `Documents must not contain empty strings.`
+                });
+        }
+    }
+
     try {
-        const { typeOfSeller, governId, proofOfBankAcc } = req.body;
+        const { typeOfSeller, ...data } = req.body;
 
         await Seller.findOneAndUpdate(
             { _userId: user._userId },
             {
                 typeOfSeller: typeOfSeller.toUpperCase(),
-                governId: governId,
-                proofOfBankAcc: proofOfBankAcc,
+                data,
                 isApproved: 'UPDATED'
             },
             { new: true, runValidators: true }
@@ -186,6 +242,11 @@ exports.updateSellerById = async (req, res) => {
                 status: 400,
                 message: error.errors.typeOfSeller.message
             })
+        if (error instanceof BSONTypeError)
+            return res.status(400).json({
+                status: 400,
+                message: "Must be valid id of user."
+            });
         return res.status(500).json({
             status: 500,
             message: error
@@ -194,9 +255,17 @@ exports.updateSellerById = async (req, res) => {
 }
 
 exports.deleteSellerById = async (req, res) => {
-    const user = req.seller;
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({
+            status: 400,
+            message: errors.array()[0].msg
+        })
+    }
 
-    const checkSeller = await Seller.findOne({ _userId: user._userId });
+    const id = mongoose.Types.ObjectId(req.body._userId.trim());
+
+    const checkSeller = await Seller.findOne({ _userId: id });
     if (!checkSeller)
         return res.status(400).json({
             status: 400,
@@ -204,14 +273,45 @@ exports.deleteSellerById = async (req, res) => {
         });
 
     try {
-        await Seller.findOneAndDelete({ _userId: user._userId });
-        await SellerDetails.findOneAndDelete({ _userId: user._userId});
+        await Seller.findOneAndDelete({ _userId: id });
+        const seller = await SellerDetails.findOneAndDelete({ _userId: id }) || "No name store";
+        await User.findByIdAndUpdate(
+            id,
+            { isSeller: false },
+            { new: true }
+        )
+
+        const user = await UserDetails.findOne({ _userId: id });
+        const title = "Deletion of Seller Account";
+        let body;
+
+        if (req.user.isAdmin)
+            body = `Hello ${user.firstName} ${user.lastName}.<br><br>
+                        We have deleted your seller account: ${seller.storeName}.<br>
+                        Thank you for your service and for using JACS!<br><br>
+                        Keep safe always!<br><br>
+                        <strong>Just Another Computer Shop, JACS. 2022</strong>`;
+
+        body = `Hello ${user.firstName} ${user.lastName}!<br><br>
+                    You have successfully deleted your seller account: ${seller.storeName}.<br>
+                    Thank you for your service and for using JACS!<br><br>
+                    Keep safe always!<br><br>
+                    <strong>Just Another Computer Shop, JACS. 2022</strong>`;
+
+        sendEmail(user.email, title, body);
+
         return res.status(200).json({
             status: 200,
-            message: `Seller successfully deleted.`
+            message: `Seller ${id} successfully deleted.`
         })
 
     } catch (error) {
+        if (error instanceof BSONTypeError)
+            return res.status(400).json({
+                status: 400,
+                message: "Must be valid id of user."
+            });
+
         console.log(error);
         return res.status(500).json({
             status: 500,

@@ -4,24 +4,9 @@ const EmailToken = require("../models/EmailToken");
 const { sendEmail } = require("../utils/sendEmail");
 const { validationResult } = require("express-validator");
 const UserDetails = require("../models/UserDetails");
+const mongoose = require("mongoose");
 const crypto = require("crypto");
 
-const checkUser = async (user) => {
-    const checkIfSeller = await User.findOne({ _id: user._userId })
-    if (!checkIfSeller)
-        return res.status(400).json({
-            status: 400,
-            message: `Seller does not exists.`
-        });
-
-    if (!checkIfSeller.isSeller) {
-        return res.status(400).json({
-            status: 400,
-            message: "User is not a seller."
-        })
-    }
-
-}
 
 exports.getAllSellerDetails = async (req, res) => {
     try {
@@ -59,7 +44,6 @@ exports.getAllSellerDetails = async (req, res) => {
 exports.getSellerDetailsById = async (req, res) => {
 
     const user = req.seller;
-    checkUser(user);
 
     try {
         const seller = await SellerDetails.findOne({ _userId: user._userId })
@@ -93,15 +77,22 @@ exports.addSellerDetailsById = async (req, res) => {
         })
     }
 
-    const user = req.seller;
-    checkUser(user);
+    const { _userId, ...body } = req.body;
+    const id = mongoose.Types.ObjectId(_userId.trim());
 
-    const checkSeller = await SellerDetails.findOne({ _userId: user._userId });
+    const checkSeller = await SellerDetails.findOne({ _userId: id });
     if (checkSeller)
         return res.status(400).json({
             status: 400,
             message: `Seller details are already exists.`
         });
+
+    const checkIfEmailExists = await SellerDetails.findOne({ email: req.body.email });
+    if (checkIfEmailExists)
+        return res.status(400).json({
+            status: 400,
+            message: `Email already used.`
+        })
 
     if (req.body.isEmailConfirmed) {
         if (!req.user.isAdmin)
@@ -112,18 +103,14 @@ exports.addSellerDetailsById = async (req, res) => {
     }
 
     try {
-        const { storeName, contactNo, email } = req.body;
-
         const newSellerDetail = new SellerDetails({
-            _userId: user._userId,
-            storeName: storeName,
-            contactNo: contactNo,
-            email: email,
+            _userId: id,
+            ...body,
         });
 
         newSellerDetail.save().then(() => {
             EmailToken.findOneAndUpdate(
-                { _userId: user._userId },
+                { _userId: id },
                 {
                     token: crypto.randomBytes(16).toString("hex"),
                     expires: "15m",
@@ -138,20 +125,20 @@ exports.addSellerDetailsById = async (req, res) => {
                     }
 
                     const title = "Seller Email Verification";
-                    const body = `Hello ${user.firstName} ${user.lastName}! <br><br>
+                    const body = `Hello ${newSellerDetail.storeName}! <br><br>
                         Please click the link below to confirm your seller email. <br>
                         <a href=${process.env.URI}/api/sellers/verify/${data._userId.toString()}/${data.token}>Verify my seller email!</a><br>
                         Please note that all of your updates about your seller account will be sent on this email.<br><br>
                         Thank you and have a good day!<br><br>
                         <strong>Just Another Computer Shop. JACS. 2022</strong>`;
 
-                    sendEmail(user.email, title, body);
+                    sendEmail(newSellerDetail.email, title, body);
                 }
             )
 
             return res.status(200).json({
                 status: 200,
-                message: `Seller detail has been created for user ${user._id}.`
+                message: `Seller detail has been created for user ${newSellerDetail._userId}.`
             });
         })
 
@@ -165,8 +152,8 @@ exports.addSellerDetailsById = async (req, res) => {
 }
 
 exports.updateSellerDetailsById = async (req, res) => {
+
     const user = req.seller;
-    checkUser(user);
 
     if (req.body.isEmailConfirmed) {
         if (!req.user.isAdmin)
@@ -174,6 +161,15 @@ exports.updateSellerDetailsById = async (req, res) => {
                 status: 400,
                 message: `Access denied.`
             });
+    }
+
+    if (req.body.storeName !== undefined) {
+        const name = req.body.storeName
+        if (name.length < 1)
+            return res.status(400).json({
+                status: 400,
+                message: "Store Name must have at least 1 char."
+            })
     }
 
     if (req.body.email !== undefined) {
@@ -260,15 +256,29 @@ exports.updateSellerDetailsById = async (req, res) => {
 }
 
 exports.deleteSellerDetailsById = async (req, res) => {
-    const user = req.seller;
-    checkUser(user);
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({
+            status: 400,
+            message: errors.array()[0].msg
+        })
+    }
 
     try {
-        await SellerDetails.findOneAndDelete({ _userId: user._userId });
+        const id = req.body.id;
+        const seller = await SellerDetails.findOne({ _userId: id })
+        if (!seller)
+            return res.status(400).json({
+                status: 400,
+                message: `Seller does not exists.`,
+            });
+
+        await SellerDetails.findOneAndDelete({ _userId: mongoose.Types.ObjectId(id) });
         return res.status(200).json({
             status: 200,
-            message: `User ${user._userId} has been successfully deleted.`,
+            message: `User ${id} has been successfully deleted.`,
         });
+        
     } catch (error) {
         console.log(error);
         return res.status(500).json({
