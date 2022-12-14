@@ -191,6 +191,15 @@ exports.updateSellerById = async (req, res) => {
             });
     }
 
+    if (req.body.typeOfSeller !== undefined) {
+        if (checkSeller.typeOfSeller !== req.body.typeOfSeller)
+            if (req.body.documents === undefined)
+                return res.status(400).json({
+                    status: 400,
+                    message: `Documents are required when changing seller type.`
+                });
+    }
+
     if (req.body.documents !== undefined) {
         const docs = req.body.documents;
         if (docs.length < 1)
@@ -215,7 +224,7 @@ exports.updateSellerById = async (req, res) => {
             { _userId: user._userId },
             {
                 typeOfSeller: typeOfSeller.toUpperCase(),
-                data,
+                ...data,
                 isApproved: 'UPDATED'
             },
             { new: true, runValidators: true }
