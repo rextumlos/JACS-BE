@@ -16,14 +16,8 @@ const SellerSchema = new mongoose.Schema({
         },
         required: true,
     },
-    governId: {
+    documents: {
         type: [String],
-        match: /^.{5,}$/,
-        required: true,
-    },
-    proofOfBankAcc: {
-        type: [String],
-        match: /^.{5,}$/,
         required: true,
     },
     isApproved: {

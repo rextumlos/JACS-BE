@@ -22,9 +22,10 @@ router.get("/sellers/all", verifyTokenAndAdmin, getAllSellers);
 router.route("/sellers/:userId")
     .get(verifyTokenAndAuthorization, getSellerById)
     .post([
-        body("typeOfSeller", "Type of seller is required.").isLength({ min: 1 }),
-        body("governId").isArray({ min: 1 }).withMessage("Government ID link/s is/are required in an array."),
-        body("proofOfBankAcc").isArray({ min: 1 }).withMessage("Proof of bank account link/s is/are required in an array."),
+        body("typeOfSeller", "Type of seller is required.")
+            .isLength({ min: 1 }),
+        body("documents")
+            .isArray({min: 1}).withMessage("Documents must have at least 1 file name.")
     ], verifyTokenAndAuthorization, addSellerById)
     .put(verifyTokenAndAuthorization, updateSellerById)
     .delete(verifyTokenAndAuthorization, deleteSellerById);

@@ -40,13 +40,6 @@ const UserDetails = new mongoose.Schema({
     }
 })
 
-UserDetails.virtual("fullName")
-    .get(() => { return `${this.firstName} ${this.lastName}`})
-    .set((v) => {
-        const firstName = v.substring(0, v.indexOf(" "));
-        const lastName = v.substring(v.indexOf(" ") + 1);
-        this.set({ firstName, lastName })
-    });
 
 UserDetails.plugin(mongoosePaginate);
 module.exports = mongoose.model("UserDetails", UserDetails);
