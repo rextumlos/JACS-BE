@@ -5,7 +5,11 @@ const UserDetails = require("../models/UserDetails");
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 const { validationResult } = require("express-validator");
+const { sendEmail } = require("../utils/sendEmail");
+const mongoose = require("mongoose");
+const { BSONTypeError } = require("bson");
 
+// Get all user details
 exports.getAllUserDetails = async (req, res) => {
     let { query, page = 1, limit = 10 } = req.query;
 
@@ -28,12 +32,13 @@ exports.getAllUserDetails = async (req, res) => {
     }
 }
 
+// Get a User Detail
 exports.getUserDetail = async (req, res) => {
     const { _id } = req.profile;
     const id = _id.toString();
 
     try {
-        const userDetail = await UserDetails.findOne({ userId: id });
+        const userDetail = await UserDetails.findOne({ _userId: id });
         if (!userDetail) {
             return res.status(400).json({
                 status: 400,
@@ -57,6 +62,7 @@ exports.getUserDetail = async (req, res) => {
 
 }
 
+// Add User Detail
 exports.addUserDetail = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -66,10 +72,10 @@ exports.addUserDetail = async (req, res) => {
         })
     }
 
-    const { _id } = req.profile;
-    const id = _id.toString();
+    const { _userId, ...body } = req.body;
+    const id = mongoose.Types.ObjectId(_userId.trim());
 
-    const checkIfDetailExists = await UserDetails.findOne({ userId: id });
+    const checkIfDetailExists = await UserDetails.findOne({ _userId: id });
     if (checkIfDetailExists)
         return res.status(400).json({
             status: 400,
@@ -84,14 +90,12 @@ exports.addUserDetail = async (req, res) => {
         })
 
     try {
-        const userId = id;
         const newUserDetail = new UserDetails({
-            userId,
-            ...req.body
+            _userId: id,
+            ...body
         })
 
-        await newUserDetail.save(async error => {
-            // Email Verification
+        newUserDetail.save(async error => {
             if (error) {
                 return res.status(400).json({
                     status: 400,
@@ -99,69 +103,59 @@ exports.addUserDetail = async (req, res) => {
                 })
             }
 
-            const emailToken = new EmailToken({
-                _userId: userId,
-                token: crypto.randomBytes(16).toString("hex"),
-            });
+            EmailToken.findOneAndUpdate(
+                { _userId: _userId },
+                {
+                    token: crypto.randomBytes(16).toString("hex"),
+                    expires: "15m",
+                },
+                { upsert: true, new: true, setDefaultsOnInsert: true },
+                (error, data) => {
+                    if (error) {
+                        return res.status(400).json({
+                            status: 400,
+                            message: error,
+                        })
+                    }
+                    const title = "Email confirmation";
+                    const body = `Please click the link below to confirm your email. <br>
+                        <a href=${process.env.URI}/api/verify/${data._userId}/${data.token}>Verify your email</a><br>
+                        Please note that if you change your email in future, you will need to verify it again.<br><br>
+                        Thank you for creating your account!`;
 
-            await emailToken.save(error => {
-                if (error) {
-                    return res.status(400).json({
-                        status: 400,
-                        message: error,
-                    })
+                    sendEmail(newUserDetail.email, title, body);
                 }
+            )
 
-                const transporter = nodemailer.createTransport({
-                    service: "gmail",
-                    auth: {
-                        user: process.env.GMAIL_EMAIL,
-                        pass: process.env.GMAIL_PASS,
-                    }
-                });
-
-                const mailOptions = {
-                    from: process.env.GMAIL_EMAIL,
-                    to: newUserDetail.email,
-                    subject: "Email confirmation",
-                    html: `Please click the link below to confirm your email. <br>
-                        <a href=${process.env.URI}/api/verify/${emailToken._userId}/${emailToken.token}>Verify your email</a><br>
-                        Thank you for creating your account!`
-                };
-                
-                transporter.sendMail(mailOptions, (error, response) => {
-                    if(error) {
-                        console.log(error);
-                    } else {
-                        console.log("Email verification sent.");
-                    }
-                })
-
+            res.status(201).json({
+                status: 201,
+                message: `User detail added for User ${id}! We sent a mail on your email to verify your account. Please verify it.`
             })
         })
 
-        res.status(201).json({
-            status: 201,
-            message: `User detail added for User ${id}!`
-        })
-
     } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            status: 500,
-            message: error
-        })
+        if (error instanceof BSONTypeError)
+            return res.status(400).json({
+                status: 400,
+                message: "Must be valid id of user."
+            });
+        else
+            res.status(500).json({
+                status: 500,
+                message: error
+            })
     }
 
 }
 
+// Update User Detail
 exports.updateUserDetail = async (req, res) => {
     const { _id } = req.profile;
     const id = _id.toString();
 
-    if (req.body.email) {
+    if (req.body.email !== undefined) {
         let regexp = /\S+@\S+\.\S+/;
-        regexp.test(req.body.email)
+        regexp.test(req.body.email !== undefined)
         if (!regexp)
             return res.status(400).json({
                 status: 400,
@@ -178,34 +172,156 @@ exports.updateUserDetail = async (req, res) => {
 
     try {
         const updatedUserDetail = await UserDetails.findOneAndUpdate(
-            { userId: id },
+            { _userId: id },
             {
                 $set: req.body,
             },
             { new: true }
         );
 
-        return res.status(200).json({
-            status: 200,
-            message: "User detail updated!",
-        });
+        if (req.body.email !== undefined) {
+            const account = await User.findByIdAndUpdate(
+                updatedUserDetail._userId,
+                {
+                    isVerified: false,
+                },
+                { new: true }
+            )
+
+            EmailToken.findOneAndUpdate(
+                { _userId: updatedUserDetail._userId },
+                {
+                    token: crypto.randomBytes(16).toString("hex"),
+                    expires: "15m",
+                },
+                { upsert: true, new: true, setDefaultsOnInsert: true },
+                (error, data) => {
+
+                    if (error) {
+                        return res.status(400).json({
+                            status: 400,
+                            message: error,
+                        })
+                    }
+
+                    const title = "Updated Email Verification";
+                    const body = `Hello ${account.username}! <br><br>
+                                    We noticed that you have changed your email. <br><br>
+                                    Please click the link below to re-confirm your seller email. <br>
+                                    <a href=${process.env.URI}/api/verify/${data._userId}/${data.token}>Re-verify my email!</a><br>
+                                    Please note that if you change your email in future, you will need to verify it again.<br><br>
+                                    Thank you and have a good day!<br><br>
+                                    <strong>Just Another Computer Shop. JACS. 2022</strong>`;
+
+                    sendEmail(updatedUserDetail.email, title, body);
+
+                    return res.status(200).json({
+                        status: 200,
+                        message: "User detail updated! Please re-confirm your email.",
+                    });
+                }
+            )
+        } else
+            return res.status(200).json({
+                status: 200,
+                message: "User detail updated!",
+            });
+
     } catch (error) {
-        return res.status(500).json(error);
+        return res.status(500).json({
+            status: 500,
+            message: error
+        });
     }
 }
 
+// Delete User Detail
 exports.deleteUserDetail = async (req, res) => {
-    const { _id } = req.profile;
-    const id = _id.toString();
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({
+            status: 400,
+            message: errors.array()[0].msg
+        })
+    }
 
     try {
-        await UserDetails.findOneAndDelete({ userId: id });
+        const id = req.body.id.trim();
+
+        await UserDetails.deleteOne({ _userId: mongoose.Types.ObjectId(id) })
+
         return res.status(200).json({
             status: 200,
-            message: `User ${id} has been successfully deleted.`,
-        });
+            message: `User ${id} has been deleted successfully.`
+        })
+
     } catch (error) {
-        return res.status(500).json(error);
+        if (error instanceof BSONTypeError)
+            return res.status(400).json({
+                status: 400,
+                message: "Must be valid id of user."
+            });
+        else
+            return res.status(500).json({
+                status: 500,
+                message: error
+            });
     }
 }
 
+// Resend Email Verification
+exports.resendverification = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({
+            status: 400,
+            message: errors.array()[0].msg
+        })
+    }
+
+    try {
+        const email = req.body.email;
+        const findUser = await UserDetails.findOne({ email: email });
+
+        if (!findUser)
+            return res.status(400).json({
+                status: 400,
+                message: "Sorry, there is no user using the email you have input."
+            })
+
+        EmailToken.findOneAndUpdate(
+            { _userId: findUser._userId },
+            {
+                token: crypto.randomBytes(16).toString("hex"),
+                expires: "15m",
+            },
+            { upsert: true, new: true, setDefaultsOnInsert: true },
+            (error, data) => {
+                if (error) {
+                    return res.status(400).json({
+                        status: 400,
+                        message: error,
+                    })
+                }
+
+                const title = "Email confirmation";
+                const body = `Please click the link below to confirm your email. <br>
+                            <a href=${process.env.URI}/api/verify/${data._userId}/${data.token}>Verify your email</a><br>
+                            Thank you for creating your account!`;
+
+                sendEmail(findUser.email, title, body);
+
+                return res.status(200).json({
+                    status: 200,
+                    message: `Email verification resent.`
+                });
+            }
+        )
+
+    } catch (error) {
+        return res.status(500).json({
+            status: 500,
+            message: error
+        })
+    }
+}

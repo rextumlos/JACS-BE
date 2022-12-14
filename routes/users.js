@@ -12,33 +12,46 @@ const router = express.Router();
 // Get user by id
 router.param("userId", getUserById);
 
-// Get all users
-router.get("/users/all", verifyTokenAndAdmin, getAllUsers);
+// For user details routes
+router.route("/users/details")
+  .get(getAllUserDetails)
+  .post(verifyTokenAndAuthorization, [
+    body("_userId")
+      .isLength({ min: 1 }).withMessage("_userId is required."),
+    body("firstName")
+      .isLength({ min: 1 }).withMessage("First name is required."),
+    body("lastName")
+      .isLength({ min: 1 }).withMessage("Last name is required."),
+    body("email")
+      .isEmail().withMessage("Invalid email."),
+    body("contactNo")
+      .isMobilePhone().withMessage("Must be mobile number."),
+  ], addUserDetail)
+  .delete(verifyTokenAndAuthorization, [
+    body("id")
+      .isLength({ min: 1 }).withMessage("_userId is required.")
+  ], deleteUserDetail);
+
+// Get all users and delete user
+router.route("/users")
+  .get(verifyTokenAndAdmin, getAllUsers)
+  .delete(verifyTokenAndAuthorization, [
+    body("id")
+      .isLength({ min: 1 }).withMessage("_userId is required.")
+  ], deleteUser);
+
 // Get user statistics
 router.get("/users/stats", verifyTokenAndAdmin, getUserStatistics);
-// Get user
-router.get("/users/:userId", verifyTokenAndAdmin, getUser);
-// Update user
-router.put("/users/:userId", verifyTokenAndAuthorization, updateUser);
-// Delete user
-router.delete("/users/:userId", verifyTokenAndAuthorization, deleteUser);
 
-// For user details routes
-// Get all user details
-router.get("/users", getAllUserDetails);
-// Get user detail
-router.get("/users/:userId/details", getUserDetail);
-// Add user detail
-router.post("/users/:userId/details", [
-  body("firstName").isLength({min: 1}).withMessage("First name is required."),
-  body("lastName").isLength({min: 1}).withMessage("Last name is required."),
-  body("email").isEmail().withMessage("Invalid email."),
-  body("contactNo").isMobilePhone().withMessage("Must be mobile number."),
-], verifyTokenAndAuthorization, addUserDetail);
-// Update user detail
-router.put("/users/:userId/details",verifyTokenAndAuthorization, updateUserDetail);
-// Delete user detail
-router.delete("/users/:userId/details",verifyTokenAndAuthorization, deleteUserDetail);
+// Get and Update by Id of User Details
+router.route("/users/:userId/details")
+  .get(getUserDetail)
+  .put(verifyTokenAndAuthorization, updateUserDetail);
+
+// Get user by id and update user by id
+router.route("/users/:userId")
+  .get(verifyTokenAndAuthorization, getUser)
+  .put(verifyTokenAndAuthorization, updateUser);
 
 
 module.exports = router;
