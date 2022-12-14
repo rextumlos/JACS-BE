@@ -6,22 +6,35 @@ const { BSONTypeError } = require("bson");
 const { validationResult } = require("express-validator");
 
 exports.getUserById = (req, res, next, id) => {
-    User.findById(id).exec((error, user) => {
-        if (error)
+    try {
+        User.findById(mongoose.Types.ObjectId(id)).exec((error, user) => {
+            if (error)
+                return res.status(400).json({
+                    status: 400,
+                    message: error
+                })
+            else if (!user)
+                return res.status(400).json({
+                    status: 400,
+                    message: "User not found."
+                })
+            else {
+                req.profile = user._doc;
+                next();
+            }
+        })
+        
+    } catch (error) {
+        if (error instanceof BSONTypeError)
             return res.status(400).json({
                 status: 400,
-                message: error
-            })
-        else if (!user)
-            return res.status(400).json({
-                status: 400,
-                message: "User not found."
-            })
-        else {
-            req.profile = user._doc;
-            next();
-        }
-    })
+                message: "Must be valid id of user."
+            });
+        return res.status(500).json({
+            status: 500,
+            message: error
+        })
+    }
 }
 
 exports.getUser = (req, res) => {
