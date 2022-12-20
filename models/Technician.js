@@ -7,50 +7,22 @@ const TechnicianSchema = new mongoose.Schema({
         ref: "User",
         required: true,
     },
-    yearsOfExperience: {
-        type: Number,
-        required: true,
-    },
-    areaOfExpertise: {
-        type: String,
-        enum: {
-            values: ['hardware', 'software'],
-            message: "Area of expertise is required.",
-        },
-        required: true,
-    },
-    levelOfExpertise: {
-        type: String,
-        enum: {
-            values: ['beginner', 'intermediate', 'advanced'],
-            message: "Level of expertise is required.",
-        },
-        required: true,
-    },
-    email: {
-        type: String,
-        required: true,
-    },
-    description: {
-        type: String,
-        required: true,
-    },
-    workSetup: {
-        type: String,
-        enum: {
-            values: ['online', 'physical'],
-            message: "Work setup is required.",
-        },
-        required: true,
-    },
     governId: {
-        type: String,
+        type: [String],
         required: true,
     },
     certOfTrainings: {
         type: [String],
         required: true,
-    },
+    }, 
+    isApproved: {
+        type: String,
+        enum: {
+            values: ['PENDING', 'APPROVED', 'REJECTED', 'UPDATED'],
+            uppercase: true,
+        },
+        default: 'PENDING',
+    }
 },
     { timestamps: true }
 )
