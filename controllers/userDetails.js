@@ -73,23 +73,31 @@ exports.addUserDetail = async (req, res) => {
     }
 
     const { _userId, ...body } = req.body;
-    const id = mongoose.Types.ObjectId(_userId.trim());
-
-    const checkIfDetailExists = await UserDetails.findOne({ _userId: id });
-    if (checkIfDetailExists)
-        return res.status(400).json({
-            status: 400,
-            message: `A user detail already exists.`
-        })
-
-    const checkIfEmailExists = await UserDetails.findOne({ email: req.body.email });
-    if (checkIfEmailExists)
-        return res.status(400).json({
-            status: 400,
-            message: `Email already used.`
-        })
 
     try {
+        const id = mongoose.Types.ObjectId(_userId.trim());
+
+        const checkIfDetailExists = await UserDetails.findOne({ _userId: id });
+        if (checkIfDetailExists)
+            return res.status(400).json({
+                status: 400,
+                message: `A user detail already exists.`
+            })
+
+        const checkUser = await User.findById(id);
+        if (!checkUser)
+            return res.status(400).json({
+                status: 400,
+                message: `User not found.`
+            })
+
+        const checkIfEmailExists = await UserDetails.findOne({ email: req.body.email });
+        if (checkIfEmailExists)
+            return res.status(400).json({
+                status: 400,
+                message: `Email already used.`
+            })
+
         const newUserDetail = new UserDetails({
             _userId: id,
             ...body
@@ -127,7 +135,7 @@ exports.addUserDetail = async (req, res) => {
                 }
             )
 
-            res.status(201).json({
+            return res.status(201).json({
                 status: 201,
                 message: `User detail added for User ${id}! We sent a mail on your email to verify your account. Please verify it.`
             })
@@ -140,7 +148,7 @@ exports.addUserDetail = async (req, res) => {
                 message: "Must be valid id of user."
             });
         else
-            res.status(500).json({
+            return res.status(500).json({
                 status: 500,
                 message: error
             })
@@ -245,8 +253,15 @@ exports.deleteUserDetail = async (req, res) => {
         })
     }
 
+    const id = req.body.id.trim();
+
     try {
-        const id = req.body.id.trim();
+        const checkUser = await User.findById(mongoose.Types.ObjectId(id));
+        if (!checkUser)
+            return res.status(400).json({
+                status: 400,
+                message: `User not found.`
+            })
 
         await UserDetails.deleteOne({ _userId: mongoose.Types.ObjectId(id) })
 

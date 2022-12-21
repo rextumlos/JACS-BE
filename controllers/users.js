@@ -4,6 +4,10 @@ const UserDetails = require("../models/UserDetails");
 const mongoose = require("mongoose");
 const { BSONTypeError } = require("bson");
 const { validationResult } = require("express-validator");
+const Seller = require("../models/Seller");
+const SellerDetails = require("../models/SellerDetails");
+const Technician = require("../models/Technician");
+const TechnicianDetails = require("../models/TechnicianDetails");
 
 exports.getUserById = (req, res, next, id) => {
     try {
@@ -120,6 +124,11 @@ exports.deleteUser = async (req, res) => {
 
         await User.findByIdAndDelete(id);
         await UserDetails.findOneAndDelete({ _userId: id });
+        await Seller.findOneAndDelete({ _userId: id });
+        await SellerDetails.findOneAndDelete({ _userId: id });
+        await Technician.findOneAndDelete({ _userId: id });
+        await TechnicianDetails.findOneAndDelete({ _userId: id });
+        
         return res.status(200).json({
             status: 200,
             message: `User ${id} has been successfully deleted.`,
