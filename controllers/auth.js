@@ -87,22 +87,6 @@ exports.login = async (req, res) => {
       });
     }
 
-    // const userDetails = await UserDetails.findOne({ userId: user._id });
-    // if (!user.isVerified) {
-    //   if (userDetails)
-    //     return res.status(200).json({
-    //       status: 200,
-    //       message: "Seems like you have email input in your account. Please verify your email.",
-    //       result: userDetails._doc
-    //     })
-
-    //   return res.status(200).json({
-    //     status: 200,
-    //     message: "Please verify your account using your email.",
-    //   });
-    // }
-
-
     const accessToken = jwt.sign(
       {
         id: user._id,
@@ -112,7 +96,7 @@ exports.login = async (req, res) => {
       { expiresIn: "3d" }
     );
 
-  const { _id, username, isAdmin, isVerified, ...hide } = user._doc;
+    const { _id, username, isAdmin, isVerified, ...hide } = user._doc;
 
     return res.status(200).json({
       status: 200,
@@ -151,7 +135,7 @@ exports.forgotpassword = async (req, res) => {
       })
 
     EmailToken.findOneAndUpdate(
-      { _userId: findUser.userId },
+      { _userId: findUser._userId },
       {
         token: crypto.randomBytes(16).toString("hex"),
         expires: "15m",
@@ -178,7 +162,7 @@ exports.forgotpassword = async (req, res) => {
           to: findUser.email,
           subject: "Reset password confirmation.",
           html: `Please click the link below to reset your password. <br>
-                            <a href=${process.env.URI}/api/resetpassword/${data._userId}/${data.token}>Change your password.</a>`
+                <a href=${process.env.URI}/api/resetpassword/${data._userId}/${data.token}>Change your password.</a>`
         };
 
         transporter.sendMail(mailOptions, (error, response) => {
@@ -233,7 +217,7 @@ exports.resetpassword = async (req, res) => {
       { new: true }
     );
 
-    await EmailToken.findOneAndDelete({_userId: getUser._id});
+    await EmailToken.findOneAndDelete({ _userId: getUser._id });
 
     return res.status(200).json({
       status: 200,
