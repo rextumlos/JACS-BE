@@ -107,7 +107,6 @@ exports.addTechnicianById = async (req, res) => {
     }
 
     const { _userId, governId, certOfTrainings } = req.body
-    const id = mongoose.Types.ObjectId(_userId.trim())
 
     if (governId === undefined)
         return res.status(400).json({
@@ -115,27 +114,45 @@ exports.addTechnicianById = async (req, res) => {
             message: `Documents are required.`
         });
 
+    for (let i = 0; i < governId.length; i++) {
+        if (governId[i] === "")
+            return res.status(400).json({
+                status: 400,
+                message: `governId must not contain empty strings.`
+            });
+    }
+
     if (certOfTrainings === undefined)
         return res.status(400).json({
             status: 400,
             message: `Documents are required.`
         });
 
-    const user = await UserDetails.findOne({ _userId: id });
-    if (!user)
-        return res.status(400).json({
-            status: 400,
-            message: `User not found.`
-        });
-
-    const checkTech = await Technician.findOne({ _userId: id });
-    if (checkTech)
-        return res.status(400).json({
-            status: 400,
-            message: `Technician required documents are already exists.`
-        });
+    for (let i = 0; i < certOfTrainings.length; i++) {
+        if (certOfTrainings[i] === "")
+            return res.status(400).json({
+                status: 400,
+                message: `certOfTrainings must not contain empty strings.`
+            });
+    }
 
     try {
+        const id = mongoose.Types.ObjectId(_userId.trim());
+
+        const user = await UserDetails.findOne({ _userId: id });
+        if (!user)
+            return res.status(400).json({
+                status: 400,
+                message: `User not found.`
+            });
+
+        const checkTech = await Technician.findOne({ _userId: id });
+        if (checkTech)
+            return res.status(400).json({
+                status: 400,
+                message: `Technician required documents are already exists.`
+            });
+
         const newTech = new Technician({
             _userId: id,
             governId: governId,
@@ -273,16 +290,16 @@ exports.deleteTechnicianById = async (req, res) => {
         })
     }
 
-    const id = mongoose.Types.ObjectId(req.body._userId.trim());
-
-    const checkTech = await Technician.findOne({ _userId: id });
-    if (!checkTech)
-        return res.status(400).json({
-            status: 400,
-            message: `Technician does not exists.`
-        });
-
     try {
+        const id = mongoose.Types.ObjectId(req.body._userId.trim());
+
+        const checkTech = await Technician.findOne({ _userId: id });
+        if (!checkTech)
+            return res.status(400).json({
+                status: 400,
+                message: `Technician does not exists.`
+            });
+
         await Technician.findOneAndDelete({ _userId: id });
         await User.findByIdAndUpdate(
             id,
