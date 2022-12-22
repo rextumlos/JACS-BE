@@ -6,6 +6,7 @@ const { validationResult } = require("express-validator");
 const UserDetails = require("../models/UserDetails");
 const mongoose = require("mongoose");
 const crypto = require("crypto");
+const { BSONTypeError } = require("bson");
 
 
 exports.getAllSellerDetails = async (req, res) => {
@@ -78,31 +79,32 @@ exports.addSellerDetailsById = async (req, res) => {
     }
 
     const { _userId, ...body } = req.body;
-    const id = mongoose.Types.ObjectId(_userId.trim());
-
-    const checkSeller = await SellerDetails.findOne({ _userId: id });
-    if (checkSeller)
-        return res.status(400).json({
-            status: 400,
-            message: `Seller details are already exists.`
-        });
-
-    const checkIfEmailExists = await SellerDetails.findOne({ email: req.body.email });
-    if (checkIfEmailExists)
-        return res.status(400).json({
-            status: 400,
-            message: `Email already used.`
-        })
-
-    if (req.body.isEmailConfirmed) {
-        if (!req.user.isAdmin)
-            return res.status(401).json({
-                status: 400,
-                message: `Access denied.`
-            });
-    }
 
     try {
+        const id = mongoose.Types.ObjectId(_userId.trim());
+
+        const checkSeller = await SellerDetails.findOne({ _userId: id });
+        if (checkSeller)
+            return res.status(400).json({
+                status: 400,
+                message: `Seller details are already exists.`
+            });
+
+        const checkIfEmailExists = await SellerDetails.findOne({ email: req.body.email });
+        if (checkIfEmailExists)
+            return res.status(400).json({
+                status: 400,
+                message: `Email already used.`
+            })
+
+        if (req.body.isEmailConfirmed) {
+            if (!req.user.isAdmin)
+                return res.status(401).json({
+                    status: 400,
+                    message: `Access denied.`
+                });
+        }
+
         const newSellerDetail = new SellerDetails({
             _userId: id,
             ...body,
@@ -144,6 +146,11 @@ exports.addSellerDetailsById = async (req, res) => {
 
     } catch (error) {
         console.log(error);
+        if (error instanceof BSONTypeError)
+            return res.status(400).json({
+                status: 400,
+                message: "Must be valid id of user."
+            });
         return res.status(500).json({
             status: 500,
             message: error
@@ -171,6 +178,7 @@ exports.updateSellerDetailsById = async (req, res) => {
                 message: "Store Name must have at least 1 char."
             })
     }
+    const checkIfEmailExists = await SellerDetails.findOne({ email: req.body.email });
 
     if (req.body.email !== undefined) {
         let regexp = /\S+@\S+\.\S+/;
@@ -181,12 +189,12 @@ exports.updateSellerDetailsById = async (req, res) => {
                 message: `Must be an email.`
             })
 
-        const checkIfEmailExists = await SellerDetails.findOne({ email: req.body.email });
         if (checkIfEmailExists)
-            return res.status(400).json({
-                status: 400,
-                message: `Email already used.`
-            })
+            if (checkIfEmailExists._userId.toString() !== user._userId.toString())
+                return res.status(400).json({
+                    status: 400,
+                    message: `Email already used.`
+                })
     }
 
     try {
@@ -194,11 +202,10 @@ exports.updateSellerDetailsById = async (req, res) => {
             { _userId: user._userId },
             {
                 $set: req.body,
-            },
-            { new: true }
+            }
         );
 
-        if (req.body.email !== undefined) {
+        if (req.body.email !== undefined && req.body.email !== updatedSellerDetail.email) {
             const account = await SellerDetails.findOneAndUpdate(
                 { _userId: updatedSellerDetail._userId },
                 {
@@ -232,7 +239,7 @@ exports.updateSellerDetailsById = async (req, res) => {
                                     Thank you and have a good day!<br><br>
                                     <strong>Just Another Computer Shop. JACS. 2022</strong>`;
 
-                    sendEmail(updatedSellerDetail.email, title, body);
+                    sendEmail(account.email, title, body);
 
                     return res.status(200).json({
                         status: 200,
@@ -265,7 +272,7 @@ exports.deleteSellerDetailsById = async (req, res) => {
     }
 
     try {
-        const id = req.body.id;
+        const id = mongoose.Types.ObjectId(req.body._userId);
         const seller = await SellerDetails.findOne({ _userId: id })
         if (!seller)
             return res.status(400).json({
@@ -273,14 +280,19 @@ exports.deleteSellerDetailsById = async (req, res) => {
                 message: `Seller does not exists.`,
             });
 
-        await SellerDetails.findOneAndDelete({ _userId: mongoose.Types.ObjectId(id) });
+        await SellerDetails.findOneAndDelete({ _userId: id });
         return res.status(200).json({
             status: 200,
             message: `User ${id} has been successfully deleted.`,
         });
-        
+
     } catch (error) {
         console.log(error);
+        if (error instanceof BSONTypeError)
+            return res.status(400).json({
+                status: 400,
+                message: "Must be valid id of user."
+            });
         return res.status(500).json({
             status: 500,
             message: error

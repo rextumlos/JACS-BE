@@ -107,30 +107,31 @@ exports.addSellerById = async (req, res) => {
     }
 
     const { _userId, typeOfSeller, documents } = req.body
-    const id = mongoose.Types.ObjectId(_userId.trim())
-
-    if (documents === undefined)
-        return res.status(400).json({
-            status: 400,
-            message: `Documents are required.`
-        });
-
-
-    const user = await UserDetails.findOne({ _userId: id });
-    if (!user)
-        return res.status(400).json({
-            status: 400,
-            message: `User not found.`
-        });
-
-    const checkSeller = await Seller.findOne({ _userId: id });
-    if (checkSeller)
-        return res.status(400).json({
-            status: 400,
-            message: `Seller required documents are already exists.`
-        });
 
     try {
+        const id = mongoose.Types.ObjectId(_userId.trim())
+
+        if (documents === undefined)
+            return res.status(400).json({
+                status: 400,
+                message: `Documents are required.`
+            });
+
+
+        const user = await UserDetails.findOne({ _userId: id });
+        if (!user)
+            return res.status(400).json({
+                status: 400,
+                message: `User not found.`
+            });
+
+        const checkSeller = await Seller.findOne({ _userId: id });
+        if (checkSeller)
+            return res.status(400).json({
+                status: 400,
+                message: `Seller required documents are already exists.`
+            });
+
         const newSeller = new Seller({
             _userId: id,
             typeOfSeller: typeOfSeller.toUpperCase(),
@@ -150,7 +151,7 @@ exports.addSellerById = async (req, res) => {
 
         return res.status(200).json({
             status: 200,
-            message: `Seller registration has been created for user ${user._id}.`
+            message: `Seller registration has been created for user ${user._userId}.`
         });
 
     } catch (error) {
@@ -241,7 +242,7 @@ exports.updateSellerById = async (req, res) => {
 
         return res.status(200).json({
             status: 200,
-            message: `Seller documents has been updated for user ${user._id}.`
+            message: `Seller documents has been updated for user ${user._userId}.`
         });
 
     } catch (error) {
@@ -272,16 +273,16 @@ exports.deleteSellerById = async (req, res) => {
         })
     }
 
-    const id = mongoose.Types.ObjectId(req.body._userId.trim());
-
-    const checkSeller = await Seller.findOne({ _userId: id });
-    if (!checkSeller)
-        return res.status(400).json({
-            status: 400,
-            message: `Seller does not exists.`
-        });
-
     try {
+        const id = mongoose.Types.ObjectId(req.body._userId.trim());
+
+        const checkSeller = await Seller.findOne({ _userId: id });
+        if (!checkSeller)
+            return res.status(400).json({
+                status: 400,
+                message: `Seller does not exists.`
+            });
+
         await Seller.findOneAndDelete({ _userId: id });
         const seller = await SellerDetails.findOneAndDelete({ _userId: id }) || "No name store";
         await User.findByIdAndUpdate(
@@ -342,12 +343,13 @@ exports.confirmSeller = async (req, res) => {
         const body = `Hello ${user.firstName} ${user.lastName}! <br><br>
                     Your seller application is now approved! You may now create your seller details by clicking the link below. <br><br>
                     <a href="${process.env.URI}/api/sellers/${user._userId}/details">Click me to create your seller details!</a><br><br>
+                    <strong>If you already have details, please disregard the link.</strong> <br><br>
                     We expect you to follow our rules and regulations. Thank you!<br><br>
                     <strong>Just Another Computer Shop. JACS. 2022</strong>`
 
         sendEmail(user.email, title, body);
 
-        res.status(200).json({
+        return res.status(200).json({
             status: 200,
             message: `User ${account._id} is now a verified seller!`
         })
@@ -372,13 +374,13 @@ exports.rejectSeller = async (req, res) => {
         const title = "Seller rejected."
         const body = `Hello ${user.firstName} ${user.lastName}. <br><br>
                     We are sorry to inform you that your documents you have sent does not meet the requirements for applying as seller.<br><br>
-                    Please submit another documents for us to approve your application. <br><br>
+                    Please update your documents for us to approve your application. <br><br>
                     Thank you! <br><br>
                     <strong>Just Another Computer Shop. JACS. 2022</strong>`
 
         sendEmail(user.email, title, body);
 
-        res.status(200).json({
+        return res.status(200).json({
             status: 200,
             message: `User ${account._id}'s seller application is rejected!`
         })
