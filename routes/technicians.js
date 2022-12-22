@@ -57,7 +57,7 @@ router.route("/technicians/:userId")
     .put(verifyTokenAndAuthorization, updateTechnicianById);
 
 // Technicians details CRUD Operations with params
-router.route("/technicians/:techId/details")
+router.route("/technicians/:userId/details")
     .get(getTechDetailsById)
     .put(verifyTokenAndTechnicianAuthorization, updateTechDetailsById);
 

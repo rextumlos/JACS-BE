@@ -77,21 +77,6 @@ exports.addTechDetailsById = async (req, res) => {
     }
 
     const { _userId, ...body } = req.body;
-    const id = mongoose.Types.ObjectId(_userId.trim());
-
-    const checkTech = await TechDetails.findOne({ _userId: id });
-    if (checkTech)
-        return res.status(400).json({
-            status: 400,
-            message: `Technician details are already exists.`
-        });
-
-    const checkIfEmailExists = await TechDetails.findOne({ email: req.body.email });
-    if (checkIfEmailExists)
-        return res.status(400).json({
-            status: 400,
-            message: `Email already used.`
-        })
 
     if (req.body.isEmailConfirmed) {
         if (!req.user.isAdmin)
@@ -110,6 +95,22 @@ exports.addTechDetailsById = async (req, res) => {
     }
 
     try {
+        const id = mongoose.Types.ObjectId(_userId.trim());
+
+        const checkTech = await TechDetails.findOne({ _userId: id });
+        if (checkTech)
+            return res.status(400).json({
+                status: 400,
+                message: `Technician details are already exists.`
+            });
+
+        const checkIfEmailExists = await TechDetails.findOne({ email: req.body.email });
+        if (checkIfEmailExists)
+            return res.status(400).json({
+                status: 400,
+                message: `Email already used.`
+            })
+
         const user = await UserDetails.findOne({ _userId: id });
 
         const newTechDetail = new TechDetails({
@@ -207,6 +208,7 @@ exports.updateTechDetailsById = async (req, res) => {
             })
     }
 
+    const checkIfEmailExists = await TechDetails.findOne({ email: req.body.email });
     if (req.body.email !== undefined) {
         let regexp = /\S+@\S+\.\S+/;
         regexp.test(req.body.email)
@@ -216,12 +218,12 @@ exports.updateTechDetailsById = async (req, res) => {
                 message: `Must be an email.`
             })
 
-        const checkIfEmailExists = await TechDetails.findOne({ email: req.body.email });
         if (checkIfEmailExists)
-            return res.status(400).json({
-                status: 400,
-                message: `Email already used.`
-            })
+            if (checkIfEmailExists._userId.toString() !== user._userId.toString())
+                return res.status(400).json({
+                    status: 400,
+                    message: `Email already used.`
+                })
     }
 
     try {
@@ -241,10 +243,10 @@ exports.updateTechDetailsById = async (req, res) => {
             {
                 $set: req.body,
             },
-            { new: true, runValidators: true }
+            { runValidators: true }
         );
 
-        if (req.body.email !== undefined) {
+        if (req.body.email !== undefined && req.body.email !== updatedTechDetail.email) {
             const account = await TechDetails.findOneAndUpdate(
                 { _userId: updatedTechDetail._userId },
                 {
@@ -278,7 +280,7 @@ exports.updateTechDetailsById = async (req, res) => {
                                     Thank you and have a good day!<br><br>
                                     <strong>Just Another Computer Shop. JACS. 2022</strong>`;
 
-                    sendEmail(updatedTechDetail.email, title, body);
+                    sendEmail(account.email, title, body);
 
                     return res.status(200).json({
                         status: 200,
@@ -293,6 +295,30 @@ exports.updateTechDetailsById = async (req, res) => {
             });
 
     } catch (error) {
+        if (error.name === "ValidationError" && error.errors.areaOfExpertise)
+            return res.status(400).json({
+                status: 400,
+                message: error.errors.areaOfExpertise.message
+            })
+
+        if (error.name === "ValidationError" && error.errors.yearsOfExperience)
+            return res.status(400).json({
+                status: 400,
+                message: error.errors.yearsOfExperience.message
+            })
+
+        if (error.name === "ValidationError" && error.errors.levelOfExpertise)
+            return res.status(400).json({
+                status: 400,
+                message: error.errors.levelOfExpertise.message
+            })
+
+        if (error.name === "ValidationError" && error.errors.workSetup)
+            return res.status(400).json({
+                status: 400,
+                message: error.errors.workSetup.message
+            })
+
         console.log(error);
         return res.status(500).json({
             status: 500,
@@ -312,7 +338,7 @@ exports.deleteTechDetailsById = async (req, res) => {
     }
 
     try {
-        const id = req.body.id;
+        const id = req.body._userId;
         const tech = await TechDetails.findOne({ _userId: id })
         if (!tech)
             return res.status(400).json({
@@ -347,7 +373,6 @@ exports.resendTechEmail = async (req, res) => {
     try {
         const email = req.body.email;
         const findUser = await TechDetails.findOne({ email: email });
-        const user = await UserDetails.findOne({ _userId: findUser._userId });
 
         if (!findUser)
             return res.status(400).json({
@@ -360,6 +385,8 @@ exports.resendTechEmail = async (req, res) => {
                 status: 400,
                 message: "Your email is already verified."
             })
+
+        const user = await UserDetails.findOne({ _userId: findUser._userId });
 
         EmailToken.findOneAndUpdate(
             { _userId: findUser._userId },
@@ -379,7 +406,7 @@ exports.resendTechEmail = async (req, res) => {
                 const title = "Technician Email Verification";
                 const body = `Hello ${user.firstName} ${user.lastName}! <br><br>
                         Please click the link below to confirm your technician email. <br>
-                        <a href=${process.env.URI}/api/technicians/verify/${data._userId}/${data.token}>Verify your seller email!</a><br>
+                        <a href=${process.env.URI}/api/technicians/verify/${data._userId}/${data.token}>Verify your technician email!</a><br>
                         Please note that all of your updates about your technician account will be sent on this email.<br><br>
                         Thank you and have a good day!<br><br>
                         <strong>Just Another Computer Shop. JACS. 2022</strong>`;
@@ -388,7 +415,7 @@ exports.resendTechEmail = async (req, res) => {
 
                 return res.status(200).json({
                     status: 200,
-                    message: "Seller email verification resent."
+                    message: "Technician email verification resent."
                 })
             }
         )
