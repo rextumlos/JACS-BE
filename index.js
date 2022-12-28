@@ -10,11 +10,12 @@ dotenv.config();
 
 // Routes
 const userRoutes = require("./routes/users");
-const productRoutes = require("./routes/products");
 const buildRoutes = require("./routes/builds");
 const authRoutes = require("./routes/auth");
 const sellerRoutes = require("./routes/sellers");
+const productRoutes = require("./routes/products");
 const technicianRoutes = require("./routes/technicians");
+const categoryRoutes = require("./routes/categories");
 const User = require("./models/User");
 
 // Database Connection
@@ -49,6 +50,7 @@ app.use("/api", buildRoutes);
 app.use("/api", authRoutes);
 app.use("/api", sellerRoutes);
 app.use("/api", technicianRoutes);
+app.use("/api", categoryRoutes);
 
 app.listen(port, () => {
   console.log(`Server started. Listening on port ${port}...`);
