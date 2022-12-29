@@ -32,7 +32,7 @@ router.route("/products")
       .not().isEmpty().withMessage("productId is required."),
   ], verifyTokenAndSellerAuthorization, deleteProduct) // Deletes a product using product id;  // Add product
 
-router.route("/products/:sellerId")
+router.route("/products/store/:sellerId")
   .get(getAllProductsOfSeller)  // Get all products from a seller using seller id
 
 router.route("/products/:productId")

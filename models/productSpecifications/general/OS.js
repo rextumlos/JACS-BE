@@ -6,31 +6,33 @@ const OSSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Product",
         required: true,
-    },
-    _categoryId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Category",
-        required: true,
+        message: `_productId is required.`
     },
     manufacturer: {
         type: String,
-        required: true
+        required: true,
+        uppercase: true,
+        message: `manufacturer is required.`
     },
     model: {
         type: String,
         required: true,
+        message: `model is required.`
     },
     mode: {
         type: String,
         required: true,
+        message: `mode is required.`
     },
     version: {
         type: String,
         required: true,
+        message: `version is required.`
     },
     maxSupportedMemory: {
         type: Number,
         required: true,
+        message: `maxSupportedMemory is required.`
     }
 },
     { timestamps: true }

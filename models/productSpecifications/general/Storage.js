@@ -6,39 +6,43 @@ const StorageSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Product",
         required: true,
-    },
-    _categoryId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Category",
-        required: true,
+        message: `_productId is required.`
     },
     manufacturer: {
         type: String,
-        required: true
+        required: true,
+        uppercase: true,
+        message: `manufacturer is required.`
     },
     capacity: {
         type: Number,
-        required: true
+        required: true,
+        message: `capacity is required.`
     },
     type: {
         type: String,
-        required: true
+        required: true,
+        message: `type is required.`
     },
     cache: {
         type: Number,
-        required: true
+        required: true,
+        message: `cache is required.`
     },
     formFactor: {
         type: String,
-        required: true
+        required: true,
+        message: `formFactor is required.`
     },
     interface: {
         type: String,
-        required: true
+        required: true,
+        message: `interface is required.`
     },
     nvme: {
         type: Boolean,
-        required: true
+        required: true,
+        message: `nvme is required.`
     }
 },
     { timestamps: true }

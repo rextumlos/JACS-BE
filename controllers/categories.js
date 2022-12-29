@@ -38,12 +38,22 @@ exports.getCategoryById = (req, res, next, id) => {
 
 exports.getAllCategories = async (req, res) => {
     try {
-        let { query, page = 1, limit = 10 } = req.query;
+        let { page = 1, limit = 10, type, name = 1, ...queries} = req.query;
+        let query = {};
+        if (type) {
+            query = {
+                type: type.toUpperCase()
+            }
+        }
 
         const options = {
-            page: page,
-            limit: limit
-        };
+            page,
+            limit,
+            sort: {
+                name: name
+            },
+            queries
+        }
 
         const categories = await Category.paginate(query, options)
 
