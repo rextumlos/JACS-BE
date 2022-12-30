@@ -12,6 +12,10 @@ const STORAGE = require("../../models/productSpecifications/general/Storage");
 const VIDEO_CARD = require("../../models/productSpecifications/general/VideoCard");
 
 // Expansion Cards
+const SOUND_CARD = require("../../models/productSpecifications/expansionCards/SoundCard");
+const WIRED_NA = require("../../models/productSpecifications/expansionCards/SoundCard");
+const WIRELESS_NA = require("../../models/productSpecifications/expansionCards/SoundCard");
+
 // Peripherals
 // Accessories/Others
 
@@ -26,7 +30,7 @@ const updateSpecification = async (req, res) => {
         switch (category) {
             // GENERAL
             case "CASE":
-                findSpecification = await Case.findOne({_productId: _id});
+                findSpecification = await Case.findOne({ _productId: _id });
                 updatedSpecification = await Case.findOneAndUpdate(
                     { _productId: _id },
                     {
@@ -37,7 +41,7 @@ const updateSpecification = async (req, res) => {
 
                 break;
             case "CPU":
-                findSpecification = await CPU.findOne({_productId: _id});
+                findSpecification = await CPU.findOne({ _productId: _id });
                 updatedSpecification = await CPU.findOneAndUpdate(
                     { _productId: _id },
                     {
@@ -48,7 +52,7 @@ const updateSpecification = async (req, res) => {
 
                 break;
             case "CPU_COOLER":
-                findSpecification = await CPU_COOLER.findOne({_productId: _id});
+                findSpecification = await CPU_COOLER.findOne({ _productId: _id });
                 updatedSpecification = await CPU_COOLER.findOneAndUpdate(
                     { _productId: _id },
                     {
@@ -59,7 +63,7 @@ const updateSpecification = async (req, res) => {
 
                 break;
             case "MEMORY":
-                findSpecification = await MEMORY.findOne({_productId: _id});
+                findSpecification = await MEMORY.findOne({ _productId: _id });
                 updatedSpecification = await MEMORY.findOneAndUpdate(
                     { _productId: _id },
                     {
@@ -70,7 +74,7 @@ const updateSpecification = async (req, res) => {
 
                 break;
             case "MONITOR":
-                findSpecification = await MONITOR.findOne({_productId: _id});
+                findSpecification = await MONITOR.findOne({ _productId: _id });
                 updatedSpecification = await MONITOR.findOneAndUpdate(
                     { _productId: _id },
                     {
@@ -81,7 +85,7 @@ const updateSpecification = async (req, res) => {
 
                 break;
             case "MOTHERBOARD":
-                findSpecification = await MOTHERBOARD.findOne({_productId: _id});
+                findSpecification = await MOTHERBOARD.findOne({ _productId: _id });
                 updatedSpecification = await MOTHERBOARD.findOneAndUpdate(
                     { _productId: _id },
                     {
@@ -92,7 +96,7 @@ const updateSpecification = async (req, res) => {
 
                 break;
             case "OS":
-                findSpecification = await OS.findOne({_productId: _id});
+                findSpecification = await OS.findOne({ _productId: _id });
                 updatedSpecification = await OS.findOneAndUpdate(
                     { _productId: _id },
                     {
@@ -103,7 +107,7 @@ const updateSpecification = async (req, res) => {
 
                 break;
             case "POWER_SUPPLY":
-                findSpecification = await POWER_SUPPLY.findOne({_productId: _id});
+                findSpecification = await POWER_SUPPLY.findOne({ _productId: _id });
                 updatedSpecification = await POWER_SUPPLY.findOneAndUpdate(
                     { _productId: _id },
                     {
@@ -114,7 +118,7 @@ const updateSpecification = async (req, res) => {
 
                 break;
             case "STORAGE":
-                findSpecification = await STORAGE.findOne({_productId: _id});
+                findSpecification = await STORAGE.findOne({ _productId: _id });
                 updatedSpecification = await STORAGE.findOneAndUpdate(
                     { _productId: _id },
                     {
@@ -125,7 +129,7 @@ const updateSpecification = async (req, res) => {
 
                 break;
             case "VIDEO_CARD":
-                findSpecification = await VIDEO_CARD.findOne({_productId: _id});
+                findSpecification = await VIDEO_CARD.findOne({ _productId: _id });
                 updatedSpecification = await VIDEO_CARD.findOneAndUpdate(
                     { _productId: _id },
                     {
@@ -137,15 +141,46 @@ const updateSpecification = async (req, res) => {
                 break;
 
             // Expansion Cards
+            case "SOUND_CARD":
+                findSpecification = await SOUND_CARD.findOne({ _productId: _id });
+                updatedSpecification = await SOUND_CARD.findOneAndUpdate(
+                    { _productId: _id },
+                    {
+                        $set: body
+                    },
+                    { runValidators: true, new: true }
+                )
+                break;
+            case "WIRED_NETWORK_ADAPTER":
+                findSpecification = await WIRED_NA.findOne({ _productId: _id });
+                updatedSpecification = await WIRED_NA.findOneAndUpdate(
+                    { _productId: _id },
+                    {
+                        $set: body
+                    },
+                    { runValidators: true, new: true }
+                )
+                break;
+            case "WIRELESS_NETWORK_ADAPTER":
+                findSpecification = await WIRELESS_NA.findOne({ _productId: _id });
+                updatedSpecification = await WIRELESS_NA.findOneAndUpdate(
+                    { _productId: _id },
+                    {
+                        $set: body
+                    },
+                    { runValidators: true, new: true }
+                )
+                break;
+
             // Peripherals
             // Accessories/Others
         }
 
         if (!findSpecification)
-        return res.status(400).json({
-            status: 400,
-            message: `No specification for product ID: ${_id}!`
-        })
+            return res.status(400).json({
+                status: 400,
+                message: `No specification for product ID: ${_id}!`
+            })
 
         return res.status(200).json({
             status: 200,

@@ -6,22 +6,26 @@ const WiredNASchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Product",
         required: true,
-    },
-    _categoryId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Category",
-        required: true,
+        message: `_productId is required.`
     },
     manufacturer: {
         type: String,
         required: true,
+        message: `manufacturer is required.`
     },
     interface: {
         type: String,
         required: true,
+        message: `interface is required.`
     },
     features: {
         type: [String],
+        validate: {
+            validator: function (value) {
+                return value.every(v => v !== '');
+            },
+            message: 'features cannot contain empty strings'
+        },
     },
 },
     { timestamps: true }

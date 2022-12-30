@@ -6,43 +6,61 @@ const SoundcardSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Product",
         required: true,
-    },
-    _categoryId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Category",
-        required: true,
+        message: `_productId is required.`
     },
     manufacturer: {
         type: String,
         required: true,
+        uppercase: true,
+        message: `manufacturer is required.`
     },
     model: {
         type: String,
         required: true,
+        message: `model is required.`
     },
     channels: {
         type: [Number],
         required: true,
+        validate: {
+            validator: function (value) {
+                return value.every(v => v !== '');
+            },
+            message: 'channels cannot contain empty strings'
+        },
+        message: `channels is required.`
     },
     digitalAudio: {
         type: String,
         required: true,
+        message: `digitalAudio is required.`
     },
     signalToNoiseRatio: {
         type: Number,
         required: true,
+        message: `signalToNoiseRatio is required.`
     },
     sampleRate: {
         type: Number,
         required: true,
+        message: `sampleRate is required.`
+    },
+    chipSet: {
+        type: String,
     },
     interface: {
-        type: [String],
+        type: String,
         required: true,
+        message: `interface is required.`
     },
     color: {
         type: [String],
-        required: true,
+        validate: {
+            validator: function (value) {
+                return value.every(v => v !== '');
+            },
+            message: 'color cannot contain empty strings'
+        },
     }
 },
     { timestamps: true }

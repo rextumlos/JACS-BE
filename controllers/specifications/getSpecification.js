@@ -12,6 +12,10 @@ const STORAGE = require("../../models/productSpecifications/general/Storage");
 const VIDEO_CARD = require("../../models/productSpecifications/general/VideoCard");
 
 // Expansion Cards
+const SOUND_CARD = require("../../models/productSpecifications/expansionCards/SoundCard");
+const WIRED_NA = require("../../models/productSpecifications/expansionCards/SoundCard");
+const WIRELESS_NA = require("../../models/productSpecifications/expansionCards/SoundCard");
+
 // Peripherals
 // Accessories/Others
 
@@ -55,8 +59,24 @@ const getSpecification = async (req, res) => {
                 break;
 
             // Expansion Cards
+            case "SOUND_CARD":
+                specification = await SOUND_CARD.findOne({ _productId: _id });
+                break;
+            case "WIRED_NETWORK_ADAPTER":
+                specification = await WIRED_NA.findOne({ _productId: _id });
+                break;
+            case "WIRELESS_NETWORK_ADAPTER":
+                specification = await WIRELESS_NA.findOne({ _productId: _id });
+                break;
+
             // Peripherals
+            case "":
+                break;
+
             // Accessories/Others
+            case "":
+                break;
+
         }
 
         if (!specification)

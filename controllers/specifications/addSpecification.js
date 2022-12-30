@@ -12,7 +12,17 @@ const STORAGE = require("../../models/productSpecifications/general/Storage");
 const VIDEO_CARD = require("../../models/productSpecifications/general/VideoCard");
 
 // Expansion Cards
+const SOUND_CARD = require("../../models/productSpecifications/expansionCards/SoundCard");
+const WIRED_NA = require("../../models/productSpecifications/expansionCards/SoundCard");
+const WIRELESS_NA = require("../../models/productSpecifications/expansionCards/SoundCard");
+
 // Peripherals
+const HEADPHONES = require("../../models/productSpecifications/peripherals/Headphone");
+const KEYBOARD = require("../../models/productSpecifications/peripherals/Keyboard");
+const MOUSE = require("../../models/productSpecifications/peripherals/Mouse");
+const SPEAKER = require("../../models/productSpecifications/peripherals/Speaker");
+const WEBCAM = require("../../models/productSpecifications/peripherals/Webcam");
+
 // Accessories/Others
 
 const addSpecification = async (req, res) => {
@@ -249,8 +259,90 @@ const addSpecification = async (req, res) => {
                 break;
 
             // Expansion Cards
+            case "SOUND_CARD":
+                existingSpecification = SOUND_CARD.findOne({ _productId: _id });
+                newSpecification = new SOUND_CARD({
+                    _productId: body._productId,
+                    manufacturer: body.manufacturer,
+                    model: body.model,
+                    channels: body.channels,
+                    digitalAudio: body.digitalAudio,
+                    signalToNoiseRatio: body.signalToNoiseRatio,
+                    sampleRate: body.sampleRate,
+                    chipSet: body.chipSet,
+                    interface: body.interface,
+                    color: body.color,
+                })
+
+                break;
+            case "WIRED_NETWORK_ADAPTER":
+                existingSpecification = WIRED_NA.findOne({ _productId: _id });
+                newSpecification = new WIRED_NA({
+                    _productId: body._productId,
+                    manufacturer: body.manufacturer,
+                    interface: body.interface,
+                    features: body.features,
+
+                })
+                break;
+            case "WIRELESS_NETWORK_ADAPTER":
+                existingSpecification = WIRELESS_NA.findOne({ _productId: _id });
+                newSpecification = new WIRELESS_NA({
+                    _productId: body._productId,
+                    manufacturer: body.manufacturer,
+                    protocol: body.protocol,
+                    interface: body.interface,
+                    security: body.security,
+                    antenna: body.antenna,
+                    features: body.features,
+                })
+                break;
+
             // Peripherals
+            case "HEADPHONES":
+                existingSpecification = HEADPHONES.findOne({ _productId: _id });
+                newSpecification = new HEADPHONES({
+                    _productId: body._productId,
+                    manufacturer: body.manufacturer,
+                    
+                })
+                break;
+            case "KEYBOARD":
+                existingSpecification = KEYBOARD.findOne({ _productId: _id });
+                newSpecification = new KEYBOARD({
+                    _productId: body._productId,
+                    manufacturer: body.manufacturer,
+
+                })
+                break;
+            case "MOUSE":
+                existingSpecification = MOUSE.findOne({ _productId: _id });
+                newSpecification = new MOUSE({
+                    _productId: body._productId,
+                    manufacturer: body.manufacturer,
+
+                })
+                break;
+            case "SPEAKER":
+                existingSpecification = SPEAKER.findOne({ _productId: _id });
+                newSpecification = new SPEAKER({
+                    _productId: body._productId,
+                    manufacturer: body.manufacturer,
+
+                })
+                break;
+            case "WEBCAM":
+                existingSpecification = WEBCAM.findOne({ _productId: _id });
+                newSpecification = new WEBCAM({
+                    _productId: body._productId,
+                    manufacturer: body.manufacturer,
+                    
+                })
+                break;
+
             // Accessories/Others
+            case "":
+                break;
         }
 
         if (existingSpecification)
