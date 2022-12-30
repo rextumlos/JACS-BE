@@ -10,6 +10,7 @@ const SellerDetailsSchema = new mongoose.Schema({
     storeName: {
         type: String,
         required: true,
+        unique: true,
     },
     contactNo: {
         type: Number,

@@ -3,6 +3,8 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const { BSONTypeError } = require("bson");
 const { default: mongoose } = require("mongoose");
+const SellerDetails = require("../models/SellerDetails");
+const Product = require("../models/Product");
 
 const verifyToken = (req, res, next) => {
     const authHeader = req.headers.authorization;
@@ -55,19 +57,74 @@ const verifyTokenAndAdmin = (req, res, next) => {
 const verifyTokenAndSellerAuthorization = (req, res, next) => {
 
     verifyToken(req, res, async () => {
-        const userId = req.params.userId || req.body._userId;
-
-        if (userId === undefined)
-            res.status(403).json({
-                status: 403,
-                message: "_userId is required."
-            })
-
         try {
+            let objectIds = [];
+            let sellerId;
+            if (req.body.productId) {
+                const id = req.body.productId;
+                for (let i = 0; i < id.length; i++) {
+                    if (id[i] === "")
+                        return res.status(400).json({
+                            status: 400,
+                            message: `id must not contain empty strings.`
+                        });
+
+                    const convertId = await mongoose.Types.ObjectId(id[i])
+
+                    const findProduct = await Product.findById(convertId);
+                    if (!findProduct)
+                        return res.status(400).json({
+                            status: 400,
+                            message: `Product id: ${id[i]} not found.`
+                        });
+
+                    const seller = await SellerDetails.findById(findProduct._sellerId);
+                    if (req.user.id !== seller._userId.toString() && !req.user.isAdmin)
+                        return res.status(400).json({
+                            status: 400,
+                            message: `Cannot delete ${id[i]} because you do not own it.`
+                        });
+
+                    objectIds.push(seller._userId);
+                }
+            }
+
+            if (req.params.productId) {
+                const id = req.params.productId;
+                const product = await Product.findById(mongoose.Types.ObjectId(id));
+                if (!product)
+                    return res.status(400).json({
+                        status: 400,
+                        message: `Product id: ${id} not found.`
+                    });
+
+                const seller = await SellerDetails.findById(product._sellerId);
+                sellerId = seller._userId;
+            }
+
+            if (req.body._sellerId) {
+                const id = req.body._sellerId
+                const seller = await SellerDetails.findById(id)
+                if (!seller)
+                    return res.status(400).json({
+                        status: 400,
+                        message: `Seller id: ${id} not found.`
+                    });
+
+                sellerId = seller._userId;
+            }
+
+            const userId = req.params.userId || req.body._userId || objectIds[0] || sellerId;
+
+            if (userId === undefined)
+                res.status(403).json({
+                    status: 403,
+                    message: "_userId is required."
+                })
 
             const user = await User.findById(mongoose.Types.ObjectId(userId));
 
-            if (req.user.id === userId && user.isSeller || req.user.isAdmin) {
+            if (req.user.id === userId.toString() && user.isSeller || req.user.isAdmin) {
                 next();
             } else {
                 res.status(403).json({
@@ -88,7 +145,7 @@ const verifyTokenAndSellerAuthorization = (req, res, next) => {
                 message: error
             })
         }
-        
+
     })
 }
 
@@ -103,7 +160,6 @@ const verifyTokenAndTechnicianAuthorization = (req, res, next) => {
             })
 
         try {
-
             const user = await User.findById(mongoose.Types.ObjectId(userId));
 
             if (req.user.id === userId && user.isTech || req.user.isAdmin) {
@@ -127,7 +183,7 @@ const verifyTokenAndTechnicianAuthorization = (req, res, next) => {
                 message: error
             })
         }
-        
+
     })
 }
 

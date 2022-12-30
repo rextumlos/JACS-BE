@@ -1,5 +1,5 @@
 const express = require("express");
-const { getAllSellerDetails, updateSellerDetailsById, addSellerDetailsById, deleteSellerDetailsById, getSellerDetailsById, checkSeller, resendSellerEmail } = require("../controllers/sellerDetails");
+const { getAllSellerDetails, updateSellerDetailsById, addSellerDetailsById, deleteSellerDetailsById, getSellerDetailsById, checkSeller, resendSellerEmail, getStoreById, getStore } = require("../controllers/sellerDetails");
 const { getSellerById, addSellerById, updateSellerById, deleteSellerById, getAllSellers, getSellerByUserId, confirmSeller, rejectSeller } = require("../controllers/sellers");
 const { verifyTokenAndAuthorization, verifyTokenAndAdmin, verifyTokenAndSellerAuthorization } = require("../utils/verifyToken");
 const router = express.Router();
@@ -8,6 +8,7 @@ const { getUserTokenByUserId, verifySellerToken } = require("../utils/emailVerif
 
 router.param("userId", getSellerByUserId);
 router.param("sellerId", getUserTokenByUserId);
+router.param("storeId", getStoreById);
 
 router.get("/sellers/verify/:sellerId/:token", verifySellerToken);
 router.post("/sellers/resend", [
@@ -62,5 +63,7 @@ router.put("/rejectSeller/:userId", verifyTokenAndAdmin, rejectSeller);
 router.route("/sellers/:userId/details")
     .get(getSellerDetailsById)
     .put(verifyTokenAndSellerAuthorization, updateSellerDetailsById)
+
+router.get("/store/:storeId", getStore);
 
 module.exports = router;

@@ -8,6 +8,53 @@ const mongoose = require("mongoose");
 const crypto = require("crypto");
 const { BSONTypeError } = require("bson");
 
+exports.getStoreById = (req, res, next, id) => {
+    try {
+        SellerDetails.findById(mongoose.Types.ObjectId(id)).exec((error, store) => {
+            if (error)
+                return res.status(400).json({
+                    status: 400,
+                    message: error
+                })
+            else if (!store)
+                return res.status(400).json({
+                    status: 400,
+                    message: "Store not found."
+                })
+            else {
+                req.store = store._doc;
+                next();
+            }
+        })
+    } catch (error) {
+        if (error instanceof BSONTypeError)
+            return res.status(400).json({
+                status: 400,
+                message: "Must be valid id of user."
+            });
+        return res.status(500).json({
+            status: 500,
+            message: error
+        })
+    }
+}
+
+exports.getStore = (req, res) => {
+    try {
+        return res.status(200).json({
+            status: 200,
+            result: req.store
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            status: 500,
+            message: error
+        });
+    }
+}
+
 
 exports.getAllSellerDetails = async (req, res) => {
     try {
