@@ -24,6 +24,13 @@ const SPEAKER = require("../../models/productSpecifications/peripherals/Speaker"
 const WEBCAM = require("../../models/productSpecifications/peripherals/Webcam");
 
 // Accessories/Others
+const CASE_ACCESSORY = require("../../models/productSpecifications/accessories/CaseAccessory");
+const CASE_FAN = require("../../models/productSpecifications/accessories/CaseFan");
+const EXTERNAL_STORAGE = require("../../models/productSpecifications/accessories/ExternalStorage");
+const FAN_CONTROLLER = require("../../models/productSpecifications/accessories/FanController");
+const OPTICAL_DRIVE = require("../../models/productSpecifications/accessories/OpticalDrive");
+const THERMAL_COMPOUND = require("../../models/productSpecifications/accessories/ThermalCompound");
+const UPS = require("../../models/productSpecifications/accessories/UPS");
 
 const addSpecification = async (req, res) => {
     try {
@@ -388,9 +395,129 @@ const addSpecification = async (req, res) => {
                 break;
 
             // Accessories/Others
-            case "":
+            case "CASE_ACCESSORY":
+                existingSpecification = CASE_ACCESSORY.findOne({ _productId: _id });
+                newSpecification = new CASE_ACCESSORY({
+                    _productId: body._productId,
+                    manufacturer: body.manufacturer,
+                    model: body.model,
+                    type: body.type,
+                    formFactor: body.formFactor,
+                    features: body.features,
+                })
                 break;
-        }
+            case "CASE_FAN":
+                existingSpecification = CASE_FAN.findOne({ _productId: _id });
+                newSpecification = new CASE_FAN({
+                    _productId: body._productId,
+                    manufacturer: body.manufacturer,
+                    model: body.model,
+                    size: body.size,
+                    color: body.color,
+                    quantity: body.quantity,
+                    rpm: body.rpm,
+                    airflow: body.airflow,
+                    noiseLevel: body.noiseLevel,
+                    pwm: body.pwm,
+                    led: body.led,
+                    connector: body.connector,
+                    controller: body.controller,
+                    staticPressure: body.staticPressure,
+
+                })
+                break;
+            case "EXTERNAL_STORAGE":
+                existingSpecification = EXTERNAL_STORAGE.findOne({ _productId: _id });
+                newSpecification = new EXTERNAL_STORAGE({
+                    _productId: body._productId,
+                    manufacturer: body.manufacturer,
+                    model: body.model,
+                    type: body.type,
+                    interface: body.interface,
+                    capacity: body.capacity,
+                    color: body.color,
+                    rpm: body.rpm,
+                })
+                break;
+            case "FAN_CONTROLLER":
+                existingSpecification = FAN_CONTROLLER.findOne({ _productId: _id });
+                newSpecification = new FAN_CONTROLLER({
+                    _productId: body._productId,
+                    manufacturer: body.manufacturer,
+                    model: body.model,
+                    channels: body.channels,
+                    channelWattage: body.channelWattage,
+                    pwm4pin: body.pwm4pin,
+                    formFactor: body.formFactor,
+                    features: body.features,
+                    color: body.color,
+
+                })
+                break;
+            case "OPTICAL_DRIVE":
+                existingSpecification = OPTICAL_DRIVE.findOne({ _productId: _id });
+                newSpecification = new WEBCAM({
+                    _productId: body._productId,
+                    manufacturer: body.manufacturer,
+                    model: body.model,
+                    formFactor: body.formFactor,
+                    interface: body.interface,
+                    bufferCache: body.bufferCache,
+                    dvd_romSpeed: body.dvd_romSpeed,
+                    cd_romSpeed: body.cd_romSpeed,
+                    bd_rSpeed: body.bd_rSpeed,
+                    bd_rDualLayerSpeed: body.bd_rDualLayerSpeed,
+                    bd_reSpeed: body.bd_reSpeed,
+                    bd_reDualLayerSpeed: body.bd_reDualLayerSpeed,
+                    dvdRSpeed: body.dvdRSpeed,
+                    dvdRWSpeed: body.dvdRWSpeed,
+                    dvdRDualLayerSpeed: body.dvdRDualLayerSpeed,
+                    dvd_rSpeed: body.dvd_rSpeed,
+                    dvd_rwSpeed: body.dvd_rwSpeed,
+                    dvd_rDualLayerSpeed: body.dvd_rDualLayerSpeed,
+                    dvd_ramSpeed: body.dvd_ramSpeed,
+                    cd_rSpeed: body.cd_rSpeed,
+                    cd_rwSpeed: body.cd_rwSpeed,
+                    features: body.features,
+
+                })
+                break;
+            case "THERMAL_COMPOUND":
+                existingSpecification = THERMAL_COMPOUND.findOne({ _productId: _id });
+                newSpecification = new THERMAL_COMPOUND({
+                    _productId: body._productId,
+                    manufacturer: body.manufacturer,
+                    model: body.model,
+                    amount: body.amount,
+                    features: body.features,
+                })
+                break;
+            case "UPS":
+                existingSpecification = UPS.findOne({ _productId: _id });
+                newSpecification = new UPS({
+                    _productId: body._productId,
+                    manufacturer: body.manufacturer,
+                    capacityW: body.capacityW,
+                    capacityVA: body.capacityVA,
+                    rackHeight: body.rackHeight,
+                    backupRunTimeFullLoad: body.backupRunTimeFullLoad,
+                    backupRunTimeHalfLoad: body.backupRunTimeHalfLoad,
+                    batteryChemistry: body.batteryChemistry,
+                    dataLineProtection: body.dataLineProtection,
+                    emergencyPowerOff: body.emergencyPowerOff,
+                    formFactor: body.formFactor,
+                    hotSwappable: body.hotSwappable,
+                    inputVoltage: body.inputVoltage,
+                    maxBatteryRechargeTime: body.maxBatteryRechargeTime,
+                    outputVoltage: body.outputVoltage,
+                    receptacles: body.receptacles,
+                    serialPort: body.serialPort,
+                    waveformType: body.waveformType,
+                    features: body.features,
+                })
+                break;
+        
+            }
 
         if (existingSpecification)
             return res.status(400).json({

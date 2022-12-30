@@ -6,15 +6,16 @@ const OpticalDriveSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Product",
         required: true,
-    },
-    _categoryId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Category",
-        required: true,
+        message: `_productId is required.`
     },
     manufacturer: {
         type: String,
+        uppercase: true,
         required: true,
+        message: `manufacturer is required.`
+    },
+    model: {
+        type: String,
     },
     formFactor: {
         type: String,
@@ -26,7 +27,6 @@ const OpticalDriveSchema = new mongoose.Schema({
     },
     bufferCache: {
         type: Number, 
-        required: true,
     },
     dvd_romSpeed: {
         type: Number, 
@@ -72,6 +72,15 @@ const OpticalDriveSchema = new mongoose.Schema({
     },
     cd_rwSpeed: {
         type: Number,
+    },
+    features: {
+        type: [String],
+        validate: {
+            validator: function (value) {
+                return value.every(v => v !== '');
+            },
+            message: 'features cannot contain empty strings'
+        },
     }
 },
     { timestamps: true }

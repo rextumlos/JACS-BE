@@ -6,30 +6,45 @@ const ExternalStorageSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Product",
         required: true,
-    },
-    _categoryId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Category",
-        required: true,
+        message: `_productId is required.`
     },
     manufacturer: {
         type: String,
+        uppercase: true,
         required: true,
+        message: `manufacturer is required.`
+    },
+    model: {
+        type: String,
+        required: true,
+        message: `model is required.`
     },
     type: {
         type: String,
         required: true,
+        message: `type is required.`
     },
     interface: {
         type: String,
         required: true,
+        message: `interface is required.`
     },
     capacity: {
         type: Number,
         required: true,
+        message: `capacity is required.`
     },
     color: {
-        type: [String]
+        type: [String],
+        validate: {
+            validator: function (value) {
+                return value.every(v => v !== '');
+            },
+            message: 'color cannot contain empty strings'
+        },
+    },
+    rpm : {
+        type: Number,
     }
 },
     { timestamps: true }

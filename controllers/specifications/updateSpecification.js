@@ -24,6 +24,13 @@ const SPEAKER = require("../../models/productSpecifications/peripherals/Speaker"
 const WEBCAM = require("../../models/productSpecifications/peripherals/Webcam");
 
 // Accessories/Others
+const CASE_ACCESSORY = require("../../models/productSpecifications/accessories/CaseAccessory");
+const CASE_FAN = require("../../models/productSpecifications/accessories/CaseFan");
+const EXTERNAL_STORAGE = require("../../models/productSpecifications/accessories/ExternalStorage");
+const FAN_CONTROLLER = require("../../models/productSpecifications/accessories/FanController");
+const OPTICAL_DRIVE = require("../../models/productSpecifications/accessories/OpticalDrive");
+const THERMAL_COMPOUND = require("../../models/productSpecifications/accessories/ThermalCompound");
+const UPS = require("../../models/productSpecifications/accessories/UPS");
 
 const updateSpecification = async (req, res) => {
     const { category, _id } = req.product;
@@ -231,6 +238,77 @@ const updateSpecification = async (req, res) => {
                 break;
                
             // Accessories/Others
+            case "CASE_ACCESSORY":
+                findSpecification = await CASE_ACCESSORY.findOne({ _productId: _id });
+                updatedSpecification = await CASE_ACCESSORY.findOneAndUpdate(
+                    { _productId: _id },
+                    {
+                        $set: body
+                    },
+                    { runValidators: true, new: true }
+                )
+                break;
+            case "CASE_FAN":
+                findSpecification = await CASE_FAN.findOne({ _productId: _id });
+                updatedSpecification = await CASE_FAN.findOneAndUpdate(
+                    { _productId: _id },
+                    {
+                        $set: body
+                    },
+                    { runValidators: true, new: true }
+                )
+                break;
+            case "EXTERNAL_STORAGE":
+                findSpecification = await EXTERNAL_STORAGE.findOne({ _productId: _id });
+                updatedSpecification = await EXTERNAL_STORAGE.findOneAndUpdate(
+                    { _productId: _id },
+                    {
+                        $set: body
+                    },
+                    { runValidators: true, new: true }
+                )
+                break;
+            case "FAN_CONTROLLER":
+                findSpecification = await FAN_CONTROLLER.findOne({ _productId: _id });
+                updatedSpecification = await FAN_CONTROLLER.findOneAndUpdate(
+                    { _productId: _id },
+                    {
+                        $set: body
+                    },
+                    { runValidators: true, new: true }
+                )
+                break;
+            case "OPTICAL_DRIVE":
+                findSpecification = await OPTICAL_DRIVE.findOne({ _productId: _id });
+                updatedSpecification = await OPTICAL_DRIVE.findOneAndUpdate(
+                    { _productId: _id },
+                    {
+                        $set: body
+                    },
+                    { runValidators: true, new: true }
+                )
+                break;
+            case "THERMAL_COMPOUND":
+                findSpecification = await THERMAL_COMPOUND.findOne({ _productId: _id });
+                updatedSpecification = await THERMAL_COMPOUND.findOneAndUpdate(
+                    { _productId: _id },
+                    {
+                        $set: body
+                    },
+                    { runValidators: true, new: true }
+                )
+                break;
+            case "UPS":
+                findSpecification = await UPS.findOne({ _productId: _id });
+                updatedSpecification = await UPS.findOneAndUpdate(
+                    { _productId: _id },
+                    {
+                        $set: body
+                    },
+                    { runValidators: true, new: true }
+                )
+                break;
+        
         }
 
         if (!findSpecification)

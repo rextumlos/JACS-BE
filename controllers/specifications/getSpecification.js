@@ -24,6 +24,13 @@ const SPEAKER = require("../../models/productSpecifications/peripherals/Speaker"
 const WEBCAM = require("../../models/productSpecifications/peripherals/Webcam");
 
 // Accessories/Others
+const CASE_ACCESSORY = require("../../models/productSpecifications/accessories/CaseAccessory");
+const CASE_FAN = require("../../models/productSpecifications/accessories/CaseFan");
+const EXTERNAL_STORAGE = require("../../models/productSpecifications/accessories/ExternalStorage");
+const FAN_CONTROLLER = require("../../models/productSpecifications/accessories/FanController");
+const OPTICAL_DRIVE = require("../../models/productSpecifications/accessories/OpticalDrive");
+const THERMAL_COMPOUND = require("../../models/productSpecifications/accessories/ThermalCompound");
+const UPS = require("../../models/productSpecifications/accessories/UPS");
 
 const getSpecification = async (req, res) => {
     try {
@@ -91,10 +98,30 @@ const getSpecification = async (req, res) => {
             case "WEBCAM":
                 specification = await WEBCAM.findOne({ _productId: _id });
                 break;
-                
+
             // Accessories/Others
-            case "":
+            case "CASE_ACCESSORY":
+                specification = await CASE_ACCESSORY.findOne({ _productId: _id });
                 break;
+            case "CASE_FAN":
+                specification = await CASE_FAN.findOne({ _productId: _id });
+                break;
+            case "EXTERNAL_STORAGE":
+                specification = await EXTERNAL_STORAGE.findOne({ _productId: _id });
+                break;
+            case "FAN_CONTROLLER":
+                specification = await FAN_CONTROLLER.findOne({ _productId: _id });
+                break;
+            case "OPTICAL_DRIVE":
+                specification = await OPTICAL_DRIVE.findOne({ _productId: _id });
+                break;
+            case "THERMAL_COMPOUND":
+                specification = await THERMAL_COMPOUND.findOne({ _productId: _id });
+                break;
+            case "UPS":
+                specification = await UPS.findOne({ _productId: _id });
+                break;
+        
 
         }
 
