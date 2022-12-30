@@ -17,6 +17,12 @@ const WIRED_NA = require("../../models/productSpecifications/expansionCards/Soun
 const WIRELESS_NA = require("../../models/productSpecifications/expansionCards/SoundCard");
 
 // Peripherals
+const HEADPHONES = require("../../models/productSpecifications/peripherals/Headphones");
+const KEYBOARD = require("../../models/productSpecifications/peripherals/Keyboard");
+const MOUSE = require("../../models/productSpecifications/peripherals/Mouse");
+const SPEAKER = require("../../models/productSpecifications/peripherals/Speaker");
+const WEBCAM = require("../../models/productSpecifications/peripherals/Webcam");
+
 // Accessories/Others
 
 const updateSpecification = async (req, res) => {
@@ -173,6 +179,57 @@ const updateSpecification = async (req, res) => {
                 break;
 
             // Peripherals
+            case "HEADPHONES":
+                findSpecification = await HEADPHONES.findOne({ _productId: _id });
+                updatedSpecification = await HEADPHONES.findOneAndUpdate(
+                    { _productId: _id },
+                    {
+                        $set: body
+                    },
+                    { runValidators: true, new: true }
+                )
+                break;
+            case "KEYBOARD":
+                findSpecification = await KEYBOARD.findOne({ _productId: _id });
+                updatedSpecification = await KEYBOARD.findOneAndUpdate(
+                    { _productId: _id },
+                    {
+                        $set: body
+                    },
+                    { runValidators: true, new: true }
+                )
+                break;
+            case "MOUSE":
+                findSpecification = await MOUSE.findOne({ _productId: _id });
+                updatedSpecification = await MOUSE.findOneAndUpdate(
+                    { _productId: _id },
+                    {
+                        $set: body
+                    },
+                    { runValidators: true, new: true }
+                )
+                break;
+            case "SPEAKER":
+                findSpecification = await SPEAKER.findOne({ _productId: _id });
+                updatedSpecification = await SPEAKER.findOneAndUpdate(
+                    { _productId: _id },
+                    {
+                        $set: body
+                    },
+                    { runValidators: true, new: true }
+                )
+                break;
+            case "WEBCAM":
+                findSpecification = await WEBCAM.findOne({ _productId: _id });
+                updatedSpecification = await WEBCAM.findOneAndUpdate(
+                    { _productId: _id },
+                    {
+                        $set: body
+                    },
+                    { runValidators: true, new: true }
+                )
+                break;
+               
             // Accessories/Others
         }
 

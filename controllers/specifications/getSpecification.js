@@ -17,6 +17,12 @@ const WIRED_NA = require("../../models/productSpecifications/expansionCards/Soun
 const WIRELESS_NA = require("../../models/productSpecifications/expansionCards/SoundCard");
 
 // Peripherals
+const HEADPHONES = require("../../models/productSpecifications/peripherals/Headphones");
+const KEYBOARD = require("../../models/productSpecifications/peripherals/Keyboard");
+const MOUSE = require("../../models/productSpecifications/peripherals/Mouse");
+const SPEAKER = require("../../models/productSpecifications/peripherals/Speaker");
+const WEBCAM = require("../../models/productSpecifications/peripherals/Webcam");
+
 // Accessories/Others
 
 const getSpecification = async (req, res) => {
@@ -70,9 +76,22 @@ const getSpecification = async (req, res) => {
                 break;
 
             // Peripherals
-            case "":
+            case "HEADPHONES":
+                specification = await HEADPHONES.findOne({ _productId: _id });
                 break;
-
+            case "KEYBOARD":
+                specification = await KEYBOARD.findOne({ _productId: _id });
+                break;
+            case "MOUSE":
+                specification = await MOUSE.findOne({ _productId: _id });
+                break;
+            case "SPEAKER":
+                specification = await SPEAKER.findOne({ _productId: _id });
+                break;
+            case "WEBCAM":
+                specification = await WEBCAM.findOne({ _productId: _id });
+                break;
+                
             // Accessories/Others
             case "":
                 break;

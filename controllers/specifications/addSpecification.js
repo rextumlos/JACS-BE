@@ -17,7 +17,7 @@ const WIRED_NA = require("../../models/productSpecifications/expansionCards/Soun
 const WIRELESS_NA = require("../../models/productSpecifications/expansionCards/SoundCard");
 
 // Peripherals
-const HEADPHONES = require("../../models/productSpecifications/peripherals/Headphone");
+const HEADPHONES = require("../../models/productSpecifications/peripherals/Headphones");
 const KEYBOARD = require("../../models/productSpecifications/peripherals/Keyboard");
 const MOUSE = require("../../models/productSpecifications/peripherals/Mouse");
 const SPEAKER = require("../../models/productSpecifications/peripherals/Speaker");
@@ -304,7 +304,19 @@ const addSpecification = async (req, res) => {
                 newSpecification = new HEADPHONES({
                     _productId: body._productId,
                     manufacturer: body.manufacturer,
-                    
+                    model: body.model,
+                    type: body.type,
+                    frequencyResponse: body.frequencyResponse,
+                    microphone: body.microphone,
+                    wireless: body.wireless,
+                    enclosureType: body.enclosureType,
+                    color: body.color,
+                    activeNoiseCancelling: body.activeNoiseCancelling,
+                    connection: body.connection,
+                    channels: body.channels,
+                    impedance: body.impedance,
+                    sensitivity: body.sensitivity,
+                    sensitivityAt1VRMS: body.sensitivityAt1VRMS,
                 })
                 break;
             case "KEYBOARD":
@@ -312,7 +324,16 @@ const addSpecification = async (req, res) => {
                 newSpecification = new KEYBOARD({
                     _productId: body._productId,
                     manufacturer: body.manufacturer,
-
+                    model: body.model,
+                    style: body.style,
+                    mechanical: body.mechanical,
+                    switchType: body.switchType,
+                    backlit: body.backlit,
+                    tenkeyless: body.tenkeyless,
+                    connectionType: body.connectionType,
+                    color: body.color,
+                    mouseIncluded: body.mouseIncluded,
+                    features: body.features,
                 })
                 break;
             case "MOUSE":
@@ -320,7 +341,13 @@ const addSpecification = async (req, res) => {
                 newSpecification = new MOUSE({
                     _productId: body._productId,
                     manufacturer: body.manufacturer,
-
+                    model: body.model,
+                    trackingMethod: body.trackingMethod,
+                    connectionType: body.connectionType,
+                    maxDPI: body.maxDPI,
+                    handOrientation: body.handOrientation,
+                    color: body.color,
+                    features: body.features,
                 })
                 break;
             case "SPEAKER":
@@ -328,7 +355,16 @@ const addSpecification = async (req, res) => {
                 newSpecification = new SPEAKER({
                     _productId: body._productId,
                     manufacturer: body.manufacturer,
-
+                    model: body.model,
+                    configuration: body.configuration,
+                    totalWattage: body.totalWattage,
+                    frequencyResponse: body.frequencyResponse,
+                    color: body.color,
+                    powerEachFront: body.powerEachFront,
+                    powerCenter: body.powerCenter,
+                    powerEachRear: body.powerEachRear,
+                    powerSubwoofer: body.powerSubwoofer,
+                    features: body.features,
                 })
                 break;
             case "WEBCAM":
@@ -336,7 +372,18 @@ const addSpecification = async (req, res) => {
                 newSpecification = new WEBCAM({
                     _productId: body._productId,
                     manufacturer: body.manufacturer,
-                    
+                    model: body.model,
+                    resolution: body.resolution,
+                    connection: body.connection,
+                    focusType: body.focusType,
+                    operatingSystem: body.operatingSystem,
+                    fovAngle: body.fovAngle,
+                    fStop: body.fStop,
+                    focalLength: body.focalLength,
+                    privacyShutter: body.privacyShutter,
+                    builtInLightning: body.builtInLightning,
+                    automaticLightningAdjust: body.automaticLightningAdjust,
+
                 })
                 break;
 
