@@ -14,8 +14,13 @@ const MonitorSchema = new mongoose.Schema({
         uppercase: true,
         message: `manufacturer is required.`
     },
-    screenSize: {
+    model: {
         type: String,
+        required: true,
+        message: `model is required.`
+    },
+    screenSize: {
+        type: Number,
         required: true,
         message: `screenSize is required.`
     },
@@ -54,14 +59,12 @@ const MonitorSchema = new mongoose.Schema({
         }
     },
     brightness: {
-        type: String,
+        type: Number,
         required: true,
         message: `brightness is required.`
     },
     hdrTier: {
         type: String,
-        required: true,
-        message: `hdrTier is required.`
     },
     widescreen: {
         type: Boolean,
@@ -74,9 +77,15 @@ const MonitorSchema = new mongoose.Schema({
         message: `curvedScreen is required.`
     },
     frameSync: {
-        type: String,
+        type: [String],
         required: true,
-        message: `frameSync is required.`
+        message: `frameSync is required.`,
+        validate: {
+            validator: function (value) {
+                return value.every(v => v !== '');
+            },
+            message: 'frameSync cannot contain empty strings'
+        }
     },
     builtInSpeakers: {
         type: Boolean,

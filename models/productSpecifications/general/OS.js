@@ -33,6 +33,15 @@ const OSSchema = new mongoose.Schema({
         type: Number,
         required: true,
         message: `maxSupportedMemory is required.`
+    },
+    features: {
+        type: [String],
+        validate: {
+            validator: function (value) {
+                return value.every(v => v !== '');
+            },
+            message: 'color cannot contain empty strings'
+        }
     }
 },
     { timestamps: true }

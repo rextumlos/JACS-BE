@@ -20,7 +20,7 @@ const CPUCoolerSchema = new mongoose.Schema({
         message: `model is required.`
     },
     fanRPM: {
-        type: [Number],
+        type: [String],
         required: true,
         validate: {
             validator: function (value) {
@@ -31,7 +31,7 @@ const CPUCoolerSchema = new mongoose.Schema({
         message: `fanRPM is required.`
     },
     noiseLevel: {
-        type: [Number],
+        type: [String],
         required: true,
         validate: {
             validator: function (value) {

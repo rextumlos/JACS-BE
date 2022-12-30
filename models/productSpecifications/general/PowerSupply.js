@@ -40,7 +40,7 @@ const PowerSupplySchema = new mongoose.Schema({
         message: `length is required.`
     },
     modular: {
-        type: String,
+        type: Boolean,
         required: true,
         message: `modular is required.`
     },

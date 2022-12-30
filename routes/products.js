@@ -1,5 +1,8 @@
 const router = require("express").Router();
 const { getAllProducts, addProduct, getAllProductsOfSeller, getProductById, getSellerById, getProduct, updateProduct, deleteProduct } = require("../controllers/products");
+const addSpecification = require("../controllers/specifications/addSpecification");
+const getSpecification = require("../controllers/specifications/getSpecification");
+const updateSpecification = require("../controllers/specifications/updateSpecification");
 const { verifyTokenAndSellerAuthorization } = require("../utils/verifyToken");
 const { body } = require("express-validator");
 
@@ -38,5 +41,10 @@ router.route("/products/store/:sellerId")
 router.route("/products/:productId")
   .get(getProduct) // Get a product using product id
   .put(verifyTokenAndSellerAuthorization, updateProduct) // Updates a product using product id
+
+router.route("/products/:productId/specifications") // Specifications
+  .get(getSpecification)
+  .post(verifyTokenAndSellerAuthorization, addSpecification)
+  .put(verifyTokenAndSellerAuthorization, updateSpecification);
 
 module.exports = router;

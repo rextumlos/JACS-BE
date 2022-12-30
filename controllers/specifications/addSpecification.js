@@ -4,6 +4,7 @@ const Case = require("../../models/productSpecifications/general/Case");
 const CPU = require("../../models/productSpecifications/general/CPU");
 const CPU_COOLER = require("../../models/productSpecifications/general/CPUCooler");
 const MEMORY = require("../../models/productSpecifications/general/Memory");
+const MONITOR = require("../../models/productSpecifications/general/Monitor");
 const MOTHERBOARD = require("../../models/productSpecifications/general/Motherboard");
 const OS = require("../../models/productSpecifications/general/OS");
 const POWER_SUPPLY = require("../../models/productSpecifications/general/PowerSupply");
@@ -19,11 +20,13 @@ const addSpecification = async (req, res) => {
         const { category, _id } = req.product;
         req.body._productId = _id;
         const body = req.body;
+        let existingSpecification;
         let newSpecification;
 
         switch (category) {
             // GENERAL
             case "CASE":
+                existingSpecification = Case.findOne({ _productId: _id });
                 newSpecification = new Case({
                     _productId: body._productId,
                     manufacturer: body.manufacturer,
@@ -43,6 +46,7 @@ const addSpecification = async (req, res) => {
 
                 break;
             case "CPU":
+                existingSpecification = CPU.findOne({ _productId: _id });
                 newSpecification = new CPU({
                     _productId: body._productId,
                     manufacturer: body.manufacturer,
@@ -70,6 +74,7 @@ const addSpecification = async (req, res) => {
 
                 break;
             case "CPU_COOLER":
+                existingSpecification = CPU_COOLER.findOne({ _productId: _id });
                 newSpecification = new CPU_COOLER({
                     _productId: body._productId,
                     manufacturer: body.manufacturer,
@@ -85,6 +90,7 @@ const addSpecification = async (req, res) => {
 
                 break;
             case "MEMORY":
+                existingSpecification = MEMORY.findOne({ _productId: _id });
                 newSpecification = new MEMORY({
                     _productId: body._productId,
                     manufacturer: body.manufacturer,
@@ -102,9 +108,11 @@ const addSpecification = async (req, res) => {
 
                 break;
             case "MONITOR":
+                existingSpecification = MONITOR.findOne({ _productId: _id });
                 newSpecification = new MONITOR({
                     _productId: body._productId,
                     manufacturer: body.manufacturer,
+                    model: body.model,
                     screenSize: body.screenSize,
                     resolution: body.resolution,
                     refreshRate: body.refreshRate,
@@ -124,6 +132,7 @@ const addSpecification = async (req, res) => {
 
                 break;
             case "MOTHERBOARD":
+                existingSpecification = MOTHERBOARD.findOne({ _productId: _id });
                 newSpecification = new MOTHERBOARD({
                     _productId: body._productId,
                     manufacturer: body.manufacturer,
@@ -160,6 +169,7 @@ const addSpecification = async (req, res) => {
 
                 break;
             case "OS":
+                existingSpecification = OS.findOne({ _productId: _id });
                 newSpecification = new OS({
                     _productId: body._productId,
                     manufacturer: body.manufacturer,
@@ -167,10 +177,12 @@ const addSpecification = async (req, res) => {
                     mode: body.mode,
                     version: body.version,
                     maxSupportedMemory: body.maxSupportedMemory,
+                    features: body.features
                 })
 
                 break;
             case "POWER_SUPPLY":
+                existingSpecification = POWER_SUPPLY.findOne({ _productId: _id });
                 newSpecification = new POWER_SUPPLY({
                     _productId: body._productId,
                     manufacturer: body.manufacturer,
@@ -195,6 +207,7 @@ const addSpecification = async (req, res) => {
 
                 break;
             case "STORAGE":
+                existingSpecification = STORAGE.findOne({ _productId: _id });
                 newSpecification = new STORAGE({
                     _productId: body._productId,
                     manufacturer: body.manufacturer,
@@ -208,12 +221,14 @@ const addSpecification = async (req, res) => {
 
                 break;
             case "VIDEO_CARD":
+                existingSpecification = VIDEO_CARD.findOne({ _productId: _id });
                 newSpecification = new VIDEO_CARD({
                     _productId: body._productId,
                     manufacturer: body.manufacturer,
                     model: body.model,
                     chipset: body.chipset,
                     memory: body.memory,
+                    memoryType: body.memoryType,
                     coreClock: body.coreClock,
                     boostClock: body.boostClock,
                     effectiveMemoryClock: body.effectiveMemoryClock,
@@ -226,6 +241,7 @@ const addSpecification = async (req, res) => {
                     totalSlotWidth: body.totalSlotWidth,
                     cooling: body.cooling,
                     externalPower: body.externalPower,
+                    dviOutputs: body.dviOutputs,
                     hdmiOutputs: body.hdmiOutputs,
                     displayPortOutputs: body.displayPortOutputs,
                 })
@@ -236,6 +252,12 @@ const addSpecification = async (req, res) => {
             // Peripherals
             // Accessories/Others
         }
+
+        if (existingSpecification)
+            return res.status(400).json({
+                status: 400,
+                message: `Specification of product ID: ${_id} already exists.`
+            })
 
         await newSpecification.save();
 

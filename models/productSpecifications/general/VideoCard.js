@@ -29,6 +29,11 @@ const VideoCardSchema = new mongoose.Schema({
         required: true,
         message: `memory is required.`
     },
+    memoryType: {
+        type: String,
+        required: true,
+        message: `memoryType is required.`
+    },
     coreClock: {
         type: Number,
         required: true,
@@ -92,6 +97,11 @@ const VideoCardSchema = new mongoose.Schema({
         type: String,
         required: true,
         message: `externalPower is required.`
+    },
+    dviOutputs: {
+        type: Number, 
+        required: true,
+        message: `hdmiOutputs is required.`
     },
     hdmiOutputs: {
         type: Number, 
