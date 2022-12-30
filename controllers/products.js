@@ -6,6 +6,7 @@ const { validationResult } = require("express-validator");
 const { BSONTypeError } = require("bson");
 const mongoose = require("mongoose");
 const Category = require("../models/Category");
+const { deleteSpecification } = require("./specifications/deleteSpecification");
 
 exports.getProductById = (req, res, next, id) => {
     try {
@@ -304,6 +305,7 @@ exports.deleteProduct = async (req, res) => {
 
     try {
         let objectIds = [];
+        let categories = [];
 
         for (let i = 0; i < id.length; i++) {
             if (id[i] === "")
@@ -322,8 +324,10 @@ exports.deleteProduct = async (req, res) => {
                 });
 
             objectIds.push(convertId);
+            categories.push(findProduct.category)
         }
 
+        await deleteSpecification(objectIds, categories);
         await Product.deleteMany(
             {
                 _id: { $in: objectIds }

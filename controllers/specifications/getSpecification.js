@@ -1,36 +1,12 @@
 const Product = require("../../models/Product");
 // GENERAL
-const Case = require("../../models/productSpecifications/general/Case");
-const CPU = require("../../models/productSpecifications/general/CPU");
-const CPU_COOLER = require("../../models/productSpecifications/general/CPUCooler");
-const MEMORY = require("../../models/productSpecifications/general/Memory");
-const MONITOR = require("../../models/productSpecifications/general/Monitor");
-const MOTHERBOARD = require("../../models/productSpecifications/general/Motherboard");
-const OS = require("../../models/productSpecifications/general/OS");
-const POWER_SUPPLY = require("../../models/productSpecifications/general/PowerSupply");
-const STORAGE = require("../../models/productSpecifications/general/Storage");
-const VIDEO_CARD = require("../../models/productSpecifications/general/VideoCard");
-
+const { CASE, CPU, CPU_COOLER, MEMORY, MONITOR, MOTHERBOARD, OS, POWER_SUPPLY, STORAGE, VIDEO_CARD } = require("../../models/productSpecifications/general");
 // Expansion Cards
-const SOUND_CARD = require("../../models/productSpecifications/expansionCards/SoundCard");
-const WIRED_NA = require("../../models/productSpecifications/expansionCards/SoundCard");
-const WIRELESS_NA = require("../../models/productSpecifications/expansionCards/SoundCard");
-
+const { SOUND_CARD, WIRED_NA, WIRELESS_NA } = require("../../models/productSpecifications/expansionCards");
 // Peripherals
-const HEADPHONES = require("../../models/productSpecifications/peripherals/Headphones");
-const KEYBOARD = require("../../models/productSpecifications/peripherals/Keyboard");
-const MOUSE = require("../../models/productSpecifications/peripherals/Mouse");
-const SPEAKER = require("../../models/productSpecifications/peripherals/Speaker");
-const WEBCAM = require("../../models/productSpecifications/peripherals/Webcam");
-
+const { HEADPHONES, KEYBOARD, MOUSE, SPEAKER, WEBCAM } = require("../../models/productSpecifications/peripherals");
 // Accessories/Others
-const CASE_ACCESSORY = require("../../models/productSpecifications/accessories/CaseAccessory");
-const CASE_FAN = require("../../models/productSpecifications/accessories/CaseFan");
-const EXTERNAL_STORAGE = require("../../models/productSpecifications/accessories/ExternalStorage");
-const FAN_CONTROLLER = require("../../models/productSpecifications/accessories/FanController");
-const OPTICAL_DRIVE = require("../../models/productSpecifications/accessories/OpticalDrive");
-const THERMAL_COMPOUND = require("../../models/productSpecifications/accessories/ThermalCompound");
-const UPS = require("../../models/productSpecifications/accessories/UPS");
+const { CASE_ACCESSORY, CASE_FAN, EXTERNAL_STORAGE, FAN_CONTROLLER, OPTICAL_DRIVE, THERMAL_COMPOUND, UPS } = require("../../models/productSpecifications/accessories");
 
 const getSpecification = async (req, res) => {
     try {
@@ -41,7 +17,7 @@ const getSpecification = async (req, res) => {
         switch (category) {
             // GENERAL
             case "CASE":
-                specification = await Case.findOne({ _productId: _id });
+                specification = await CASE.findOne({ _productId: _id });
                 break;
             case "CPU":
                 specification = await CPU.findOne({ _productId: _id });
