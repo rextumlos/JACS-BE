@@ -79,13 +79,13 @@ const verifyTokenAndSellerAuthorization = (req, res, next) => {
                         });
 
                     const seller = await SellerDetails.findById(findProduct._sellerId);
-                    if (req.user.id !== seller._userId && !req.user.isAdmin)
+                    if (req.user.id !== seller._userId.toString() && !req.user.isAdmin)
                         return res.status(400).json({
                             status: 400,
                             message: `Cannot delete ${id[i]} because you do not own it.`
                         });
 
-                    objectIds.push(convertId);
+                    objectIds.push(seller._userId);
                 }
             }
 
@@ -102,7 +102,19 @@ const verifyTokenAndSellerAuthorization = (req, res, next) => {
                 sellerId = seller._userId;
             }
 
-            const userId = req.params.userId || req.body._userId || req.body._sellerId || objectIds[0] || sellerId;
+            if (req.body._sellerId) {
+                const id = req.body._sellerId
+                const seller = await SellerDetails.findById(id)
+                if (!seller)
+                    return res.status(400).json({
+                        status: 400,
+                        message: `Seller id: ${id} not found.`
+                    });
+
+                sellerId = seller._userId;
+            }
+
+            const userId = req.params.userId || req.body._userId || objectIds[0] || sellerId;
 
             if (userId === undefined)
                 res.status(403).json({
@@ -112,7 +124,7 @@ const verifyTokenAndSellerAuthorization = (req, res, next) => {
 
             const user = await User.findById(mongoose.Types.ObjectId(userId));
 
-            if (req.user.id === userId && user.isSeller || req.user.isAdmin) {
+            if (req.user.id === userId.toString() && user.isSeller || req.user.isAdmin) {
                 next();
             } else {
                 res.status(403).json({
