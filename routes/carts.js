@@ -1,4 +1,4 @@
-const { addCart, getCartById, getCartOfUser, getCart, updateCart, deleteCart } = require("../controllers/cart");
+const { addCart, getCartById, getCartOfUser, getCart, updateCart, deleteCart } = require("../controllers/carts");
 
 const router = require("express").Router();
 const { body } = require("express-validator");
