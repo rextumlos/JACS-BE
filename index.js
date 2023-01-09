@@ -16,6 +16,8 @@ const sellerRoutes = require("./routes/sellers");
 const productRoutes = require("./routes/products");
 const technicianRoutes = require("./routes/technicians");
 const categoryRoutes = require("./routes/categories");
+const cartRoutes = require("./routes/cart");
+
 const User = require("./models/User");
 
 // Database Connection
@@ -52,6 +54,7 @@ app.use("/api", authRoutes);
 app.use("/api", sellerRoutes);
 app.use("/api", technicianRoutes);
 app.use("/api", categoryRoutes);
+app.use("/api", cartRoutes);
 
 app.listen(port, () => {
   console.log(`Server started. Listening on port ${port}...`);
