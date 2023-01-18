@@ -8,6 +8,52 @@ const Seller = require("../models/Seller");
 const SellerDetails = require("../models/SellerDetails");
 const Technician = require("../models/Technician");
 const TechnicianDetails = require("../models/TechnicianDetails");
+const { upload } = require("../utils/firebaseStorage");
+
+exports.uploadImage = async (req, res) => {
+    const images = req.files;
+
+    if (!images)
+        return res.status(400).json({
+            status: 400,
+            message: `Insert images to upload.`,
+        })
+
+    try {
+        let imgUrls = [];
+
+        const uploadImages = await new Promise((resolve, reject) => {
+            images.forEach((image, index, array) => {
+                upload(image).then((publicUrl, err) => {
+                    if (err)
+                        return res.status(400).json({
+                            status: 400,
+                            message: err,
+                        })
+
+                    imgUrls.push(publicUrl);
+                    if (index === array.length - 1)
+                        resolve();
+                });
+            });
+            
+        }).then(() => {
+
+            return res.status(200).json({
+                status: 200,
+                message: `Images uploaded!`,
+                result: imgUrls,
+            });
+        })
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            status: 500,
+            message: error,
+        })
+    }
+}
 
 exports.getUserById = (req, res, next, id) => {
     try {
@@ -27,7 +73,7 @@ exports.getUserById = (req, res, next, id) => {
                 next();
             }
         })
-        
+
     } catch (error) {
         if (error instanceof BSONTypeError)
             return res.status(400).json({
@@ -128,7 +174,7 @@ exports.deleteUser = async (req, res) => {
         await SellerDetails.findOneAndDelete({ _userId: id });
         await Technician.findOneAndDelete({ _userId: id });
         await TechnicianDetails.findOneAndDelete({ _userId: id });
-        
+
         return res.status(200).json({
             status: 200,
             message: `User ${id} has been successfully deleted.`,

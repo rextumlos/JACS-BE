@@ -1,4 +1,4 @@
-const { getAllUsers, getUserStatistics, updateUser, deleteUser, getUser, getUserById } = require("../controllers/users");
+const { getAllUsers, getUserStatistics, updateUser, deleteUser, getUser, getUserById, uploadImage } = require("../controllers/users");
 const { getAllUserDetails, getUserDetail, addUserDetail, updateUserDetail, deleteUserDetail } = require("../controllers/userDetails");
 const {
   verifyTokenAndAuthorization,
@@ -8,9 +8,17 @@ const {
 const { body, validationResult } = require("express-validator");
 const express = require("express");
 const router = express.Router();
+const multer = require("multer");
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+})
 
 // Get user by id
 router.param("userId", getUserById);
+
+router.route("/users/images")
+  .post(upload.array("images", 5), uploadImage);
 
 // For user details routes
 router.route("/users/details")
