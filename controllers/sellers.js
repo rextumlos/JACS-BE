@@ -6,6 +6,153 @@ const { validationResult } = require("express-validator");
 const SellerDetails = require("../models/SellerDetails");
 const mongoose = require("mongoose");
 const { BSONTypeError } = require("bson");
+const { upload, getPathStorageFromUrl, getUserIdFromFilePath, deleteFile } = require("../utils/firebaseStorage");
+
+exports.uploadImage = async (req, res) => {
+    const images = req?.files;
+    const userId = req?.seller._userId;
+
+    if (!images)
+        return res.status(400).json({
+            status: 400,
+            message: `Insert images to upload.`,
+        })
+
+    try {
+        let result = [];
+
+        const uploadImages = await new Promise((resolve, reject) => {
+            images.forEach((image, index, array) => {
+                let ref = `sellers/${userId}/images/${image.originalname}`;
+                upload(image, ref).then((data, err) => {
+                    if (err)
+                        return res.status(400).json({
+                            status: 400,
+                            message: err,
+                        })
+
+                    result.push(data);
+                    if (index === array.length - 1)
+                        resolve();
+                });
+            });
+
+        }).then(() => {
+
+            return res.status(200).json({
+                status: 200,
+                message: `Images uploaded!`,
+                result: result,
+            });
+        })
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            status: 500,
+            message: error,
+        })
+    }
+}
+
+exports.deleteFiles = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({
+            status: 400,
+            message: errors.array()[0].msg
+        })
+    }
+
+    const fileUrls = req.body?.fileUrls;
+
+    try {
+        await new Promise((resolve, reject) => {
+            fileUrls.forEach( async (url, index, array) => {
+                const filePath = getPathStorageFromUrl(url);
+
+                const rootPath = `sellers/`;
+                const userId = getUserIdFromFilePath(filePath, rootPath);
+        
+                if (userId !== req.seller._userId.toString())
+                    return res.status(400).json({
+                        status: 400,
+                        message: `Cannot delete other user's files.`
+                    })
+        
+                deleteFile(filePath).then((result, err) => {
+                    if (err)
+                        return res.status(400).json({
+                            status: 400,
+                            message: err,
+                        })
+
+                    if (index === array.length - 1)
+                        resolve();
+                });
+            })
+        }).then(() => {
+            return res.status(200).json({
+                status: 200,
+                message: `Deleted successfully.`
+            })
+        })
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            status: 500,
+            message: error,
+        })
+    }
+}
+
+exports.uploadDocs = async (req, res) => {
+    const documents = req?.files;
+    const userId = req?.seller._userId;
+
+    if (!documents)
+        return res.status(400).json({
+            status: 400,
+            message: `Insert documents to upload.`,
+        })
+
+    try {
+        let result = [];
+
+        const uploadDocs = await new Promise((resolve, reject) => {
+            documents.forEach((document, index, array) => {
+                let ref = `sellers/${userId}/documents/${document.originalname}`;
+                upload(document, ref).then((data, err) => {
+                    if (err)
+                        return res.status(400).json({
+                            status: 400,
+                            message: err,
+                        })
+
+                    result.push(data);
+                    if (index === array.length - 1)
+                        resolve();
+                });
+            });
+
+        }).then(() => {
+
+            return res.status(200).json({
+                status: 200,
+                message: `Documents uploaded!`,
+                result: result,
+            });
+        })
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            status: 500,
+            message: error,
+        })
+    }
+}
 
 exports.getSellerByUserId = (req, res, next, id) => {
     try {

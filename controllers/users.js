@@ -72,7 +72,9 @@ exports.deleteFiles = async (req, res) => {
         await new Promise((resolve, reject) => {
             fileUrls.forEach( async (url, index, array) => {
                 const filePath = getPathStorageFromUrl(url);
-                const userId = getUserIdFromFilePath(filePath);
+
+                const rootPath = `users/`;
+                const userId = getUserIdFromFilePath(filePath, rootPath);
         
                 if (userId !== req.profile._id.toString())
                     return res.status(400).json({

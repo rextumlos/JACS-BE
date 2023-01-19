@@ -58,9 +58,8 @@ const getPathStorageFromUrl = (url) => {
     return filePath;
 }
 
-const getUserIdFromFilePath = (filePath) => {
-    const basePath = `users/`;
-    let userId = filePath.replace(basePath, "");
+const getUserIdFromFilePath = (filePath, rootPath) => {
+    let userId = filePath.replace(rootPath, "");
     const indexOfEndPath = userId.indexOf("/");
     userId = userId.substring(0, indexOfEndPath);
     

@@ -1,10 +1,16 @@
 const express = require("express");
 const { getAllSellerDetails, updateSellerDetailsById, addSellerDetailsById, deleteSellerDetailsById, getSellerDetailsById, checkSeller, resendSellerEmail, getStoreById, getStore } = require("../controllers/sellerDetails");
-const { getSellerById, addSellerById, updateSellerById, deleteSellerById, getAllSellers, getSellerByUserId, confirmSeller, rejectSeller } = require("../controllers/sellers");
+const { getSellerById, addSellerById, updateSellerById, deleteSellerById, getAllSellers, getSellerByUserId, confirmSeller, rejectSeller, uploadImage, deleteFiles, uploadDocs } = require("../controllers/sellers");
 const { verifyTokenAndAuthorization, verifyTokenAndAdmin, verifyTokenAndSellerAuthorization } = require("../utils/verifyToken");
 const router = express.Router();
 const { body, check, validationResult } = require("express-validator");
 const { getUserTokenByUserId, verifySellerToken } = require("../utils/emailVerification");
+
+const multer = require("multer");
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+})
 
 router.param("userId", getSellerByUserId);
 router.param("sellerId", getUserTokenByUserId);
@@ -30,6 +36,20 @@ router.route("/sellers")
         body("_userId", "_userId is required.")
             .isLength({ min: 1 }),
     ], deleteSellerById);
+
+router.route("/sellers/images/:userId")
+    .post(verifyTokenAndSellerAuthorization, upload.array("images", 10), uploadImage)
+    .delete(verifyTokenAndSellerAuthorization, [
+        body("fileUrls")
+            .not().isEmpty().withMessage("fileUrls are required.")
+    ], deleteFiles);
+
+router.route("/sellers/documents/:userId")
+    .post(verifyTokenAndSellerAuthorization, upload.array("documents", 10), uploadDocs)
+    .delete(verifyTokenAndSellerAuthorization, [
+        body("fileUrls")
+            .not().isEmpty().withMessage("fileUrls are required.")
+    ], deleteFiles);
 
 // Get all seller details and delete a seller detail
 router.route("/sellers/details")
