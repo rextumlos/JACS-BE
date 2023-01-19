@@ -1,4 +1,4 @@
-const { getAllUsers, getUserStatistics, updateUser, deleteUser, getUser, getUserById, uploadImage, uploadDocs, deleteImage } = require("../controllers/users");
+const { getAllUsers, getUserStatistics, updateUser, deleteUser, getUser, getUserById, uploadImage, uploadDocs, deleteFiles } = require("../controllers/users");
 const { getAllUserDetails, getUserDetail, addUserDetail, updateUserDetail, deleteUserDetail } = require("../controllers/userDetails");
 const {
   verifyTokenAndAuthorization,
@@ -20,12 +20,16 @@ router.param("userId", getUserById);
 router.route("/users/images/:userId")
   .post(verifyTokenAndAuthorization, upload.array("images", 10), uploadImage)
   .delete(verifyTokenAndAuthorization, [
-    body("imageUrls")
-      .not().isEmpty().withMessage("imageUrls are required.")
-  ], deleteImage)
+    body("fileUrls")
+      .not().isEmpty().withMessage("fileUrls are required.")
+  ], deleteFiles);
 
 router.route("/users/documents/:userId")
-  .post(verifyTokenAndAuthorization, upload.array("files", 10), uploadDocs);
+  .post(verifyTokenAndAuthorization, upload.array("documents", 10), uploadDocs)
+  .delete(verifyTokenAndAuthorization, [
+    body("fileUrls")
+      .not().isEmpty().withMessage("fileUrls are required.")
+  ], deleteFiles);
 
 // For user details routes
 router.route("/users/details")

@@ -57,7 +57,7 @@ exports.uploadImage = async (req, res) => {
     }
 }
 
-exports.deleteImage = async (req, res) => {
+exports.deleteFiles = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({
@@ -66,13 +66,13 @@ exports.deleteImage = async (req, res) => {
         })
     }
 
-    const imageUrls = req.body?.imageUrls;
+    const fileUrls = req.body?.fileUrls;
 
     try {
         await new Promise((resolve, reject) => {
-            imageUrls.forEach( async (url, index, array) => {
-                const imagePath = getPathStorageFromUrl(url);
-                const userId = getUserIdFromFilePath(imagePath);
+            fileUrls.forEach( async (url, index, array) => {
+                const filePath = getPathStorageFromUrl(url);
+                const userId = getUserIdFromFilePath(filePath);
         
                 if (userId !== req.profile._id.toString())
                     return res.status(400).json({
@@ -80,7 +80,7 @@ exports.deleteImage = async (req, res) => {
                         message: `Cannot delete other user's files.`
                     })
         
-                deleteFile(imagePath).then((result, err) => {
+                deleteFile(filePath).then((result, err) => {
                     if (err)
                         return res.status(400).json({
                             status: 400,
