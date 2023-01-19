@@ -1,4 +1,4 @@
-const { getAllUsers, getUserStatistics, updateUser, deleteUser, getUser, getUserById, uploadImage } = require("../controllers/users");
+const { getAllUsers, getUserStatistics, updateUser, deleteUser, getUser, getUserById, uploadImage, uploadDocs, deleteImage } = require("../controllers/users");
 const { getAllUserDetails, getUserDetail, addUserDetail, updateUserDetail, deleteUserDetail } = require("../controllers/userDetails");
 const {
   verifyTokenAndAuthorization,
@@ -17,8 +17,15 @@ const upload = multer({
 // Get user by id
 router.param("userId", getUserById);
 
-router.route("/users/images")
-  .post(upload.array("images", 5), uploadImage);
+router.route("/users/images/:userId")
+  .post(verifyTokenAndAuthorization, upload.array("images", 10), uploadImage)
+  .delete(verifyTokenAndAuthorization, [
+    body("imageUrls")
+      .not().isEmpty().withMessage("imageUrls are required.")
+  ], deleteImage)
+
+router.route("/users/documents/:userId")
+  .post(verifyTokenAndAuthorization, upload.array("files", 10), uploadDocs);
 
 // For user details routes
 router.route("/users/details")
