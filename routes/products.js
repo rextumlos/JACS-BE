@@ -1,10 +1,15 @@
 const router = require("express").Router();
-const { getAllProducts, addProduct, getAllProductsOfSeller, getProductById, getSellerById, getProduct, updateProduct, deleteProduct } = require("../controllers/products");
+const { getAllProducts, addProduct, getAllProductsOfSeller, getProductById, getSellerById, getProduct, updateProduct, deleteProduct, uploadImage, uploadDocs, deleteFiles } = require("../controllers/products");
 const addSpecification = require("../controllers/specifications/addSpecification");
 const getSpecification = require("../controllers/specifications/getSpecification");
 const updateSpecification = require("../controllers/specifications/updateSpecification");
 const { verifyTokenAndSellerAuthorization } = require("../utils/verifyToken");
 const { body } = require("express-validator");
+const multer = require("multer");
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+})
 
 router.param("productId", getProductById);
 router.param("sellerId", getSellerById);
@@ -37,6 +42,20 @@ router.route("/products")
 
 router.route("/products/store/:sellerId")
   .get(getAllProductsOfSeller)  // Get all products from a seller using seller id
+
+router.route("/products/images/:productId")
+  .post(verifyTokenAndSellerAuthorization, upload.array("images", 10), uploadImage)
+  .delete(verifyTokenAndSellerAuthorization, [
+    body("fileUrls")
+      .not().isEmpty().withMessage("fileUrls are required.")
+  ], deleteFiles);
+
+router.route("/products/documents/:productId")
+  .post(verifyTokenAndSellerAuthorization, upload.array("documents", 10), uploadDocs)
+  .delete(verifyTokenAndSellerAuthorization, [
+    body("fileUrls")
+      .not().isEmpty().withMessage("fileUrls are required.")
+  ], deleteFiles);
 
 router.route("/products/:productId")
   .get(getProduct) // Get a product using product id

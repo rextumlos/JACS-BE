@@ -1,10 +1,16 @@
 const express = require("express");
-const { getAllTechnicians, getTechnicianById, addTechnicianById, updateTechnicianById, deleteTechnicianById, getTechnicianByUserId, confirmTech, rejectTech } = require("../controllers/technicians");
+const { getAllTechnicians, getTechnicianById, addTechnicianById, updateTechnicianById, deleteTechnicianById, getTechnicianByUserId, confirmTech, rejectTech, uploadImage, deleteFiles, uploadDocs } = require("../controllers/technicians");
 const { getUserTokenByUserId, verifyTechToken } = require("../utils/emailVerification");
 const { verifyTokenAndAuthorization, verifyTokenAndAdmin, verifyTokenAndTechnicianAuthorization } = require("../utils/verifyToken");
 const router = express.Router();
 const { body } = require("express-validator");
 const { addTechDetailsById, deleteTechDetailsById, getTechDetailsById, getAllTechDetails, updateTechDetailsById, resendTechEmail } = require("../controllers/techDetails");
+
+const multer = require("multer");
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+})
 
 router.param("userId", getTechnicianByUserId);
 router.param("techId", getUserTokenByUserId);
@@ -50,6 +56,20 @@ router.get("/technicians/verify/:techId/:token", verifyTechToken);
 router.post("/technicians/resend", [
     body("email").isEmail().withMessage("Must be an email.")
 ], resendTechEmail);
+
+router.route("/technicians/images/:userId")
+    .post(verifyTokenAndTechnicianAuthorization, upload.array("images", 10), uploadImage)
+    .delete(verifyTokenAndTechnicianAuthorization, [
+        body("fileUrls")
+            .not().isEmpty().withMessage("fileUrls are required.")
+    ], deleteFiles);
+
+router.route("/technicians/documents/:userId")
+    .post(verifyTokenAndTechnicianAuthorization, upload.array("documents", 10), uploadDocs)
+    .delete(verifyTokenAndTechnicianAuthorization, [
+        body("fileUrls")
+            .not().isEmpty().withMessage("fileUrls are required.")
+    ], deleteFiles);
 
 // Technicians CRUD Operations with params
 router.route("/technicians/:userId")
