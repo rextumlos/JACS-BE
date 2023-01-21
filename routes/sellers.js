@@ -45,8 +45,8 @@ router.route("/sellers/images/:userId")
     ], deleteFiles);
 
 router.route("/sellers/documents/:userId")
-    .post(verifyTokenAndSellerAuthorization, upload.array("documents", 10), uploadDocs)
-    .delete(verifyTokenAndSellerAuthorization, [
+    .post(verifyTokenAndAuthorization, upload.array("documents", 10), uploadDocs)
+    .delete(verifyTokenAndAuthorization, [
         body("fileUrls")
             .not().isEmpty().withMessage("fileUrls are required.")
     ], deleteFiles);
