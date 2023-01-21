@@ -1,4 +1,4 @@
-const { getAllUsers, getUserStatistics, updateUser, deleteUser, getUser, getUserById } = require("../controllers/users");
+const { getAllUsers, getUserStatistics, updateUser, deleteUser, getUser, getUserById, uploadImage, uploadDocs, deleteFiles } = require("../controllers/users");
 const { getAllUserDetails, getUserDetail, addUserDetail, updateUserDetail, deleteUserDetail } = require("../controllers/userDetails");
 const {
   verifyTokenAndAuthorization,
@@ -8,9 +8,28 @@ const {
 const { body, validationResult } = require("express-validator");
 const express = require("express");
 const router = express.Router();
+const multer = require("multer");
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+})
 
 // Get user by id
 router.param("userId", getUserById);
+
+router.route("/users/images/:userId")
+  .post(verifyTokenAndAuthorization, upload.array("images", 10), uploadImage)
+  .delete(verifyTokenAndAuthorization, [
+    body("fileUrls")
+      .not().isEmpty().withMessage("fileUrls are required.")
+  ], deleteFiles);
+
+router.route("/users/documents/:userId")
+  .post(verifyTokenAndAuthorization, upload.array("documents", 10), uploadDocs)
+  .delete(verifyTokenAndAuthorization, [
+    body("fileUrls")
+      .not().isEmpty().withMessage("fileUrls are required.")
+  ], deleteFiles);
 
 // For user details routes
 router.route("/users/details")
