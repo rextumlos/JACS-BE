@@ -5,17 +5,37 @@ const ReviewSchema = new mongoose.Schema({
     _refId: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
+        message: "_refId is required."
+    },
+    _userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+        message: "_userId is required."
     },
     stars: {
         type: Number,
         required: true,
+        max: 5,
+        message:"stars is required."
     },
+    likes: {
+        type: Number,
+        default: 0,
+    },
+    likedBy: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User"
+        }
+    ],
     img: {
         type: [String]
     },
-    comment: {
+    description: {
         type: String,
-        required: true
+        required: true,
+        message: "description is required."
     }
 },
     { timestamps: true }

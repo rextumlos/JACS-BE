@@ -5,6 +5,7 @@ const { BSONTypeError } = require("bson");
 const { default: mongoose } = require("mongoose");
 const SellerDetails = require("../models/SellerDetails");
 const Product = require("../models/Product");
+const Review = require("../models/Review");
 
 const verifyToken = (req, res, next) => {
     const authHeader = req.headers.authorization;
@@ -187,4 +188,71 @@ const verifyTokenAndTechnicianAuthorization = (req, res, next) => {
     })
 }
 
-module.exports = { verifyToken, verifyTokenAndAuthorization, verifyTokenAndAdmin, verifyTokenAndSellerAuthorization, verifyTokenAndTechnicianAuthorization };
+const verifyTokenAndReviewAuthorization = (req, res, next) => {
+    verifyToken(req, res, async () => {
+        try {
+            let objectIds = [];
+
+            if (req.body.reviewId) {
+                const id = req.body.reviewId;
+                for (let i = 0; i < id.length; i++) {
+                    if (id[i] === "")
+                        return res.status(400).json({
+                            status: 400,
+                            message: `id must not contain empty strings.`
+                        });
+
+                    const convertId = await mongoose.Types.ObjectId(id[i])
+
+                    const findReview = await Review.findById(convertId);
+                    if (!findReview)
+                        return res.status(400).json({
+                            status: 400,
+                            message: `Review id: ${id[i]} not found.`
+                        });
+
+                    if (req.user.id !== findReview._userId.toString() && !req.user.isAdmin)
+                        return res.status(400).json({
+                            status: 400,
+                            message: `Cannot delete ${id[i]} because you do not own it.`
+                        });
+
+                    objectIds.push(findReview._userId);
+                }
+            }
+
+            const userId = objectIds[0] || req.review._userId;
+
+            if (req.user.id === userId.toString() || req.user.isAdmin) {
+                next();
+            } else {
+                res.status(403).json({
+                    status: 403,
+                    message: "Access denied."
+                })
+            }
+
+
+        } catch (error) {
+            if (error instanceof BSONTypeError)
+                return res.status(400).json({
+                    status: 400,
+                    message: "Must be a valid id of user."
+                })
+            console.log(error);
+            return res.status(500).json({
+                status: 500,
+                message: error
+            })
+        }
+    })
+}
+
+module.exports = {
+    verifyToken,
+    verifyTokenAndAuthorization,
+    verifyTokenAndAdmin,
+    verifyTokenAndSellerAuthorization,
+    verifyTokenAndTechnicianAuthorization,
+    verifyTokenAndReviewAuthorization
+};
