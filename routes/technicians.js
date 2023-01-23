@@ -65,8 +65,8 @@ router.route("/technicians/images/:userId")
     ], deleteFiles);
 
 router.route("/technicians/documents/:userId")
-    .post(verifyTokenAndTechnicianAuthorization, upload.array("documents", 10), uploadDocs)
-    .delete(verifyTokenAndTechnicianAuthorization, [
+    .post(verifyTokenAndAuthorization, upload.array("documents", 10), uploadDocs)
+    .delete(verifyTokenAndAuthorization, [
         body("fileUrls")
             .not().isEmpty().withMessage("fileUrls are required.")
     ], deleteFiles);
