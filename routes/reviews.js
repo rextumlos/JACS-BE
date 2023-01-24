@@ -1,6 +1,6 @@
 const router = require("express").Router();
 const { body } = require("express-validator");
-const { getRefById, addReview, getReviewById, getAllReviewsOfRef, getReview, deleteReview, updateReview, uploadImage, deleteFiles, uploadDocs, getAverageOfReviews } = require("../controllers/reviews");
+const { getRefById, addReview, getReviewById, getAllReviewsOfRef, getReview, deleteReview, updateReview, uploadImage, deleteFiles, uploadDocs, getAverageOfReviews, likeReview, unlikeReview } = require("../controllers/reviews");
 const { verifyTokenAndAuthorization, verifyTokenAndReviewAuthorization } = require("../utils/verifyToken");
 const multer = require("multer");
 
@@ -32,6 +32,11 @@ router.route("/reviews/:refId/review/:reviewId")
     .put(verifyTokenAndReviewAuthorization, updateReview) // Update a review from referenced ID
 
 router.get("/reviews/:refId/stats", getAverageOfReviews);
+
+router.post("/reviews/:refId/review/:reviewId/like",
+    verifyTokenAndAuthorization, likeReview)
+router.post("/reviews/:refId/review/:reviewId/unlike",
+    verifyTokenAndAuthorization, unlikeReview)
 
 router.route("/reviews/:refId/review/:reviewId/images")
     .post(verifyTokenAndReviewAuthorization, upload.array("images", 10), uploadImage)

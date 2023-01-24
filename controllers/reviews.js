@@ -313,6 +313,68 @@ exports.getAverageOfReviews = async (req, res) => {
     }
 }
 
+// Like and Unlike
+exports.likeReview = async (req, res) => {
+    try {
+        const id = req.user.id;
+        const reviewId = req.review._id;
+
+        const review = await Review.findById(reviewId);
+        review.likes++;
+        review.likedBy.push(id);
+        await review.save();
+
+        return res.status(200).json({
+            status: 200,
+            message: "Successfully liked review."
+        })
+
+    } catch (error) {
+        console.log(error);
+        if (error instanceof BSONTypeError)
+            return res.status(400).json({
+                status: 400,
+                message: "Must be valid id of user."
+            });
+
+        return res.status(500).json({
+            status: 500,
+            error: error,
+        })
+    }
+}
+
+exports.unlikeReview = async (req, res) => {
+    try {
+        const id = req.user.id;
+        const reviewId = req.review._id;
+
+        const review = await Review.findById(reviewId);
+        if (review.likes !== 0)
+            review.likes--;
+
+        review.likedBy.pull(id);
+        await review.save();
+
+        return res.status(200).json({
+            status: 200,
+            message: "Successfully unliked review."
+        })
+    } catch (error) {
+        console.log(error);
+        if (error instanceof BSONTypeError)
+            return res.status(400).json({
+                status: 400,
+                message: "Must be valid id of user."
+            });
+
+        return res.status(500).json({
+            status: 500,
+            error: error,
+        })
+    }
+}
+
 // File upload
 exports.uploadImage = async (req, res) => {
     const images = req?.files;
