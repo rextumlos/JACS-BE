@@ -221,14 +221,15 @@ exports.getSellerById = (req, res, next, id) => {
 
 exports.getAllProducts = async (req, res) => {
     try {
-        let { page = 1, limit = 10, type = "", name = 1, search = "", ...queries } = req.query;
+        let { page = 1, limit = 10, category = "", name = 1, search = "", ...queries } = req.query;
 
         const query = {
             name: {
                 $regex: search, $options: 'i'
             },
-            type: type.toUpperCase()
         }
+
+        category.length > 0 ? query.category = category.toUpperCase() : null;
 
         const options = {
             page,
@@ -258,15 +259,16 @@ exports.getAllProducts = async (req, res) => {
 exports.getAllProductsOfSeller = async (req, res) => {
     const { _id } = req.seller;
     try {
-        let { page = 1, limit = 10, type = "", name = 1, search = "", ...queries } = req.query;
+        let { page = 1, limit = 10, category = "", name = 1, search = "", ...queries } = req.query;
 
         const query = {
             _sellerId: _id,
             name: {
                 $regex: search, $options: 'i'
             },
-            type: type.toUpperCase()
         }
+        
+        category.length > 0 ? query.category = category.toUpperCase() : null;
 
         const options = {
             page,
