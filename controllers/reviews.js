@@ -123,7 +123,7 @@ exports.getAllReviewsOfRef = async (req, res) => {
     const id = req.reference;
 
     try {
-        let { page = 1, limit = 10, user, sort, ...queries } = req.query;
+        let { page = 1, limit = 10, user, sortedBy, filter, ...queries } = req.query;
 
         const query = {
             _refId: id
@@ -132,11 +132,37 @@ exports.getAllReviewsOfRef = async (req, res) => {
         if (user)
             query._userId = user;
 
+        if (filter) {
+            if (filter > 5 || filter < 1)
+                return res.status(400).json({
+                    status: 400,
+                    message: `Filter star should be between 1 and 5.`
+                })
+
+            query.stars = filter;
+        }
+
         const options = {
             page,
             limit,
-            sort,
-            queries
+            ...queries
+        }
+
+        if (sortedBy) {
+            const sort = sortedBy.toString().toUpperCase();
+            switch (sort) {
+                case "RECENT":
+                    options.sort = { updatedAt: -1 };
+                    break;
+                case "LIKES":
+                    options.sort = { likes: -1 };
+                    break;
+                case "STARS":
+                    options.sort = { stars: -1 };
+                    break;
+                default:
+                    break;
+            }
         }
 
         const reviews = await Review.paginate(query, options);
@@ -147,6 +173,13 @@ exports.getAllReviewsOfRef = async (req, res) => {
         });
     } catch (error) {
         console.log(error);
+        if (error.name === "CastError" && error.path === "stars") {
+            return res.status(400).json({
+                status: 400,
+                message: `Filter parameter should be a Number.`
+            })
+        }
+
         return res.status(500).json({
             status: 500,
             error: error,
@@ -248,6 +281,14 @@ exports.updateReview = async (req, res) => {
 exports.getAverageOfReviews = async (req, res) => {
     try {
         const refId = req.reference;
+
+        const findReview = await Review.find({_refId: refId});
+        if (findReview.length === 0) {
+            return res.status(400).json({
+                status: 400,
+                message: `Cannot find review.`
+            })
+        }
 
         const average = await Review.aggregate([
             {
