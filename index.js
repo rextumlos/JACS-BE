@@ -44,8 +44,10 @@ db.once("open", () => {
 });
 
 app.use(express.json());
+
+const {cors_origin} = JSON.parse(process.env.CORS_ORIGIN)
 app.use(cors({
-  origin: process.env.CORS_ORIGIN.split(","),
+  origin: cors_origin,
   credentials: true,
 }));
 
