@@ -134,6 +134,7 @@ const addSpecification = async (req, res) => {
                     chipset: body.chipset,
                     maxMemory: body.maxMemory,
                     memorySlots: body.memorySlots,
+                    memoryType: body.memoryType,
                     memorySpeed: body.memorySpeed,
                     color: body.color,
                     sliCrossfire: body.sliCrossfire,
@@ -432,7 +433,7 @@ const addSpecification = async (req, res) => {
                 break;
             case "OPTICAL_DRIVE":
                 existingSpecification = await OPTICAL_DRIVE.findOne({ _productId: _id });
-                newSpecification = new WEBCAM({
+                newSpecification = new OPTICAL_DRIVE({
                     _productId: body._productId,
                     manufacturer: body.manufacturer,
                     model: body.model,
