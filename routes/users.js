@@ -45,6 +45,8 @@ router.route("/users/details")
       .isEmail().withMessage("Invalid email."),
     body("contactNo")
       .isMobilePhone().withMessage("Must be mobile number."),
+    body("address")
+      .isLength({min: 1}).withMessage("address is required.")
   ], addUserDetail)
   .delete(verifyTokenAndAuthorization, [
     body("id")

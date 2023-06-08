@@ -25,6 +25,10 @@ const UserDetails = new mongoose.Schema({
     img: {
         type: String,
     },
+    address: {
+        type: String,
+        required: true,
+    }
 }, {
     toJSON: {
         virtuals: true,
