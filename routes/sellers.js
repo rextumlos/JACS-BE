@@ -75,7 +75,7 @@ router.route("/sellers/:userId")
     .put(verifyTokenAndAuthorization, updateSellerById)
 
 // Confirm Seller
-router.put("/confirmSeller/:userId", verifyTokenAndAdmin, confirmSeller);
+router.put("/confirmSeller/:userId", verifyTokenAndAuthorization, confirmSeller);
 // Reject Seller
 router.put("/rejectSeller/:userId", verifyTokenAndAdmin, rejectSeller);
 
