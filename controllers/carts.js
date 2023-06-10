@@ -1,13 +1,13 @@
 const Cart = require("../models/Cart");
-const User = require("../models/User");
+const UserDetails = require("../models/UserDetails");
 const Product = require("../models/Product");
 const { BSONTypeError } = require("bson");
 const mongoose = require("mongoose");
 const { validationResult } = require("express-validator");
 
-exports.getCartById = async (req, res, next, id) => {
+exports.getCartByUserId = async (req, res, next, id) => {
     try {
-        Cart.findById(mongoose.Types.ObjectId(id)).exec((error, cart) => {
+        Cart.findOne({_userId: mongoose.Types.ObjectId(id)}).exec((error, cart) => {
             if (error)
                 return res.status(400).json({
                     status: 400,
@@ -23,44 +23,13 @@ exports.getCartById = async (req, res, next, id) => {
                 next();
             }
         })
+
     } catch (error) {
         if (error instanceof BSONTypeError)
             return res.status(400).json({
                 status: 400,
-                message: "Must be valid id of Cart."
+                message: "Must be valid id of User."
             });
-        console.log(error);
-        return res.status(500).json({
-            status: 500,
-            message: error
-        });
-    }
-}
-
-exports.getCartOfUser = async (req, res) => {
-    const id = req.params.userId;
-    let { query, page = 1, limit = 10 } = req.query;
-
-    const options = {
-        page: page,
-        limit: limit
-    };
-
-    const mainQuery = {
-        _userId: id,
-        query
-    };
-
-    try {
-        const carts = await Cart.paginate(mainQuery, options)
-
-        return res.status(200).json({
-            status: 200,
-            message: `Cart/s of user: ${id} is/are successfully retrieved.`,
-            result: carts
-        });
-
-    } catch (error) {
         console.log(error);
         return res.status(500).json({
             status: 500,
@@ -98,13 +67,20 @@ exports.addCart = async (req, res) => {
 
     try {
         const id = mongoose.Types.ObjectId(req.body._userId);
-        const user = await User.findById(id);
+        const user = await UserDetails.findOne({_userId: id});
 
         if (!user)
             return res.status(400).json({
                 status: 400,
                 message: `User not found.`
             });
+
+        const checkCart = await Cart.findOne({_userId: id})
+        if (checkCart)
+            return res.status(400).json({
+                status: 400,
+                message: `Cart already created.`
+            })
 
         for (let i = 0; i < products.length; i++) {
             if (products[i] === "")
@@ -194,65 +170,6 @@ exports.updateCart = async (req, res) => {
                 status: 400,
                 message: "Must be valid id of Product."
             });
-        console.log(error);
-        return res.status(500).json({
-            status: 500,
-            message: error
-        });
-    }
-}
-
-exports.deleteCart = async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({
-            status: 400,
-            message: errors.array()[0].msg
-        })
-    }
-
-    const id = req.body?.cartId;
-
-    try {
-        let objectIds = [];
-
-        for (let i = 0; i < id.length; i++) {
-            if (id[i] === "")
-                return res.status(400).json({
-                    status: 400,
-                    message: `cartId must not contain empty strings.`
-                });
-
-            const convertId = await mongoose.Types.ObjectId(id[i])
-
-            const findCart = await Cart.findById(convertId);
-            if (!findCart)
-                return res.status(400).json({
-                    status: 400,
-                    message: `Cart id: ${id[i]} not found.`
-                });
-
-            objectIds.push(convertId);
-        }
-
-        await Cart.deleteMany(
-            {
-                _id: { $in: objectIds }
-            }
-        );
-
-        return res.status(200).json({
-            status: 200,
-            message: `Deleted successfully.`
-        });
-
-    } catch (error) {
-        if (error instanceof BSONTypeError)
-            return res.status(400).json({
-                status: 400,
-                message: "Must be valid id of cart."
-            });
-
         console.log(error);
         return res.status(500).json({
             status: 500,
