@@ -62,6 +62,8 @@ app.use("/api", cartRoutes);
 app.use("/api", orderRoutes);
 app.use("/api", reviewRoutes);
 
+app.options('*', cors());
+
 app.listen(port, () => {
   console.log(`Server started. Listening on port ${port}...`);
 });
