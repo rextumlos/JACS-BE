@@ -206,7 +206,7 @@ exports.updateUser = async (req, res) => {
                 message: "Username must be at least 5 chars long."
             })
 
-        if (checkUser.username != null && checkUser.username !== req.profile.username)
+        if (checkUser && checkUser.username && checkUser.username !== req.profile.username)
             return res.status(400).json({
                 status: 400,
                 message: "Username already exists."
