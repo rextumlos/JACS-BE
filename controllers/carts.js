@@ -1,13 +1,14 @@
 const Cart = require("../models/Cart");
 const UserDetails = require("../models/UserDetails");
 const Product = require("../models/Product");
+const SellerDetails = require("../models/SellerDetails")
 const { BSONTypeError } = require("bson");
 const mongoose = require("mongoose");
 const { validationResult } = require("express-validator");
 
 exports.getCartByUserId = async (req, res, next, id) => {
     try {
-        Cart.findOne({_userId: mongoose.Types.ObjectId(id)}).exec((error, cart) => {
+        Cart.findOne({ _userId: mongoose.Types.ObjectId(id) }).exec((error, cart) => {
             if (error)
                 return res.status(400).json({
                     status: 400,
@@ -67,7 +68,7 @@ exports.addCart = async (req, res) => {
 
     try {
         const id = mongoose.Types.ObjectId(req.body._userId);
-        const user = await UserDetails.findOne({_userId: id});
+        const user = await UserDetails.findOne({ _userId: id });
 
         if (!user)
             return res.status(400).json({
@@ -75,7 +76,7 @@ exports.addCart = async (req, res) => {
                 message: `User not found.`
             });
 
-        const checkCart = await Cart.findOne({_userId: id})
+        const checkCart = await Cart.findOne({ _userId: id })
         if (checkCart)
             return res.status(400).json({
                 status: 400,
@@ -97,6 +98,11 @@ exports.addCart = async (req, res) => {
                     status: 400,
                     message: `Product id: ${products[i]._productId} not found.`
                 });
+
+            const seller = await SellerDetails.findById(product._sellerId)
+
+            products[i].storeName = seller.storeName
+            console.log(products[i])
         }
 
         const newCart = new Cart({
@@ -146,6 +152,10 @@ exports.updateCart = async (req, res) => {
                     status: 400,
                     message: `Product id: ${products[i]._productId} not found.`
                 });
+
+            const seller = await SellerDetails.findById(product._sellerId)
+
+            products[i].storeName = seller.storeName
         };
 
         const updatedCart = await Cart.findByIdAndUpdate(
