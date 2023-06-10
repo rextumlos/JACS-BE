@@ -1,12 +1,12 @@
-const { addCart, getCartById, getCartOfUser, getCart, updateCart, deleteCart } = require("../controllers/carts");
+const { addCart, getCartByUserId, getCartOfUser, getCart, updateCart, deleteCart } = require("../controllers/carts");
 
 const router = require("express").Router();
 const { body } = require("express-validator");
 const { verifyTokenAndAuthorization } = require("../utils/verifyToken");
 
-router.param("cartId", getCartById);
+router.param("userId", getCartByUserId);
 
-router.route("/cart") // Get all carts, add cart, delete all carts
+router.route("/cart") // add cart
     .post(verifyTokenAndAuthorization, [
         body("_userId")
             .isLength({min: 1}).withMessage("_userId is required."),
@@ -14,14 +14,7 @@ router.route("/cart") // Get all carts, add cart, delete all carts
             .not().isEmpty().withMessage("products is required.")
     ], addCart);
 
-router.route("/cart/:userId") // Get all carts of user, delete carts of user
-    .get(verifyTokenAndAuthorization, getCartOfUser)
-    .delete(verifyTokenAndAuthorization, [
-        body("cartId.*")
-            .not().isEmpty().withMessage("cardId is/are required.")
-    ], deleteCart);
-
-router.route("/cart/:userId/:cartId") // Get a cart of user, update a cart of user
+router.route("/cart/:userId") // Get cart of user, delete carts of user
     .get(verifyTokenAndAuthorization, getCart)
     .put(verifyTokenAndAuthorization, updateCart);
 
